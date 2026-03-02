@@ -1,31 +1,38 @@
+using System;
+using AuthService.Application.DTOs;
+using AuthService.Application.DTOs.Email;
+using AuthService.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using RestaurantManagementSystem.Application.Dtos.Auth;
-using RestaurantManagementSystem.Application.Interfaces;
+using Microsoft.AspNetCore.RateLimiting;
 
-namespace RestaurantManagementSystem.Api.Controllers;
+namespace AuthService.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+[Route("res/auth/[controller]")]
+public class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
+    [HttpPost("login")]
+    [EnableRateLimiting("AuthPolicy")]
+    public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
     {
-        _authService = authService;
+        var result = await authService.LoginAsync(loginDto);
+        return Ok(result);
     }
 
     [HttpPost("register")]
-    public IActionResult Register([FromBody] RegisterDto registerDto)
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    [EnableRateLimiting("AuthPolicy")]
+    public async Task<ActionResult<RegisterResponseDto>> Register([FromForm] RegisterDto registerDto)
     {
-        var result = _authService.Register(registerDto);
-        return result ? Ok("User registered successfully") : BadRequest("User already exists");
+        var result = await authService.RegisterAsync(registerDto);
+        return StatusCode(201, result);
     }
 
-    [HttpPost("login")]
-    public IActionResult Login([FromBody] LoginDto loginDto)
+    [HttpPost("verify-email")]
+    [EnableRateLimiting("AuthPolicy")]
+    public async Task<ActionResult<EmailResponseDto>> VerifyEmail([FromBody] VerifyEmailDto verifyEmailDto)
     {
-        var token = _authService.Authenticate(loginDto.Email, loginDto.Password);
-        return token != null ? Ok(new { Token = token }) : Unauthorized("Invalid credentials");
+        var result = await authService.VerifyEmailAsync(verifyEmailDto);
+        return Ok(result);
     }
 }

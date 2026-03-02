@@ -1,92 +1,385 @@
-using Konscious.Security.Cryptography;
+using AuthService.Application.DTOs;
+using AuthService.Application.Interfaces;
+using AuthService.Application.Exceptions;
+using AuthService.Application.Extensions;
+using AuthService.Application.Validators;
+using AuthService.Domain.Constants;
+using AuthService.Domain.Entities;
+using AuthService.Domain.Interfaces;
+using AuthService.Domain.Enums;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using RestaurantManagementSystem.Application.Dtos.Auth;
-using RestaurantManagementSystem.Application.Interfaces;
-using RestaurantManagementSystem.Domain.Entities;
-using RestaurantManagementSystem.Persistence.Repositories;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using Microsoft.Extensions.Logging;
+using AuthService.Application.DTOs.Email;
 
-namespace RestaurantManagementSystem.Application.Services;
+namespace AuthService.Application.Services;
 
-public class AuthService : IAuthService
+public class AuthService(
+    IUserRepository userRepository,
+    IRoleRepository roleRepository,
+    IPasswordHashService passwordHashService,
+    IJwtTokenService jwtTokenService,
+    ICloudinaryService cloudinaryService,
+    IEmailService emailService,
+    IConfiguration configuration,
+    ILogger<AuthService> logger) : IAuthService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IConfiguration _configuration;
-
-    public AuthService(IUserRepository userRepository, IConfiguration configuration)
+    private readonly ICloudinaryService _cloudinaryService = cloudinaryService;
+    public async Task<RegisterResponseDto> RegisterAsync(RegisterDto registerDto)
     {
-        _userRepository = userRepository;
-        _configuration = configuration;
-    }
+        if (await userRepository.ExistsByEmailAsync(registerDto.Email))
+        {
+            logger.LogRegistrationWithExistingEmail();
+            throw new BusinessException(ErrorCodes.EMAIL_ALREADY_EXISTS, "Correo Electronico Existente");
+        }
+        if (await userRepository.ExistsByUsernameAsync(registerDto.Username))
+        {
+            logger.LogRegistrationWithExistingUsername();
+            throw new BusinessException(ErrorCodes.USERNAME_ALREADY_EXISTS, "Nombre de Usuario Existente");
+        }
 
-    public string Authenticate(string email, string password)
-    {
-        var user = _userRepository.GetByEmail(email);
-        if (user == null || !VerifyPasswordHash(password, user.PasswordHash))
-            return null;
+        string profilePicturePath;
 
-        return GenerateJwtToken(user);
-    }
+        if (registerDto.ProfilePicture != null && registerDto.ProfilePicture.Size > 0)
+        {
+            var (isValid, errorMessage) = FileValidator.ValidateImage(registerDto.ProfilePicture);
+            if (!isValid)
+            {
+                logger.LogWarning($"File validation failed: {errorMessage}");
+                throw new BusinessException(ErrorCodes.INVALID_FILE_FORMAT, errorMessage!);
+            }
 
-    public bool Register(RegisterDto registerDto)
-    {
-        var existingUser = _userRepository.GetByEmail(registerDto.Email);
-        if (existingUser != null)
-            return false;
+            try
+            {
+                var fileName = FileValidator.GenerateSecureFileName(registerDto.ProfilePicture.FileName);
+                profilePicturePath = await _cloudinaryService.UploadImageAsync(registerDto.ProfilePicture, fileName);
+            } catch (Exception)
+            {
+                logger.LogImageUploadError();
+                throw new BusinessException(ErrorCodes.IMAGE_UPLOAD_FAILED, "Failed to upload profile image");
+            }
+        } else
+        {
+            profilePicturePath = _cloudinaryService.GetDefaultAvatarUrl();
+        }
+
+        var emailVerificationToken = TokenGenerator.GenerateEmailVerificationToken();
+        var userId = UuidGenerator.GenerateUserId();
+        var userProfileId = UuidGenerator.GenerateUserId();
+        var userEmailId = UuidGenerator.GenerateUserId();
+        var userRoleId = UuidGenerator.GenerateUserId();
+        var defaultRole = await roleRepository.GetByNameAsync(RoleConstants.USER_ROLE);
+        
+        if (defaultRole == null)
+        {
+            throw new InvalidOperationException($"Default role '{RoleConstants.USER_ROLE}' not found. Ensure seeding runs before registration.");
+        }
 
         var user = new User
         {
-            Email = registerDto.Email,
-            PasswordHash = HashPassword(registerDto.Password),
-            Role = registerDto.Role
-        };
-
-        _userRepository.Add(user);
-        return true;
-    }
-
-    private string GenerateJwtToken(User user)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[]
+            Id = userId,
+            Name = registerDto.Name,
+            SurName = registerDto.Surname,
+            UserName = registerDto.Username,
+            Email = registerDto.Email.ToLowerInvariant(),
+            Password = passwordHashService.HashPassword(registerDto.Password),
+            Status = false,
+            UserProfile = new UserProfile
             {
-                new Claim(ClaimTypes.Name, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
-            }),
-            Expires = DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                Id = userProfileId,
+                UserId = userId,
+                ProfilePicture = profilePicturePath,
+                Phone = registerDto.Phone
+            },
+            UserEmail = new UserEmail
+            {
+                Id = userEmailId,
+                UserId = userId,
+                EmailVerified = false,
+                EmailVerificationToken = emailVerificationToken,
+                EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
+            },
+            UserRoles =
+            [
+                new Domain.Entities.UserRole
+                {
+                    Id = userRoleId,
+                    UserId = userId,
+                    RoleId = defaultRole.Id
+                }
+            ]
         };
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+
+        var createdUser = await userRepository.CreateUserAsync(user);
+        logger.LogUserRegistered(createdUser.UserName);
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await emailService.SendEmailVerificationAsync(createdUser.Email, createdUser.UserName, emailVerificationToken);
+                logger.LogInformation("Se ha enviado el correo electronico de verificacion.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "No se ha enviado el correo electronico de verificacion.");
+            }
+        });
+
+        return new RegisterResponseDto
+        {
+            Success = true,
+            User = MapToUserResponseDto(createdUser),
+            Message = "Usuario registrado exitosamente. Por favor, verifica tu email para activar la cuenta.",
+            EmailVerificationRequired = true
+        };
     }
 
-    private bool VerifyPasswordHash(string password, string storedHash)
+    public async Task<AuthResponseDto> LoginAsync(LoginDto loginDto)
     {
-        var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
+        User? user = null;
+
+        if (loginDto.EmailOrUsername.Contains('@'))
         {
-            DegreeOfParallelism = 4,
-            Iterations = 3,
-            MemorySize = 19456 
+            user = await userRepository.GetByEmailAsync(loginDto.EmailOrUsername.ToLowerInvariant());
+        } else
+        {
+            user = await userRepository.GetByUsernameAsync(loginDto.EmailOrUsername);
+        }
+        if (user == null)
+        {
+            logger.LogFailedLoginAttempt();
+            throw new UnauthorizedAccessException("Credenciales Indavlidas.");
+        }
+        if (!user.Status)
+        {
+            logger.LogFailedLoginAttempt();
+            throw new UnauthorizedAccessException("Cuenta de Usuario Desabilitada.");
+        }
+        if (!passwordHashService.VerifyPassword(loginDto.Password, user.Password))
+        {
+            logger.LogFailedLoginAttempt();
+            throw new UnauthorizedAccessException("Credenciales Indavlidas.");
+        }
+
+        logger.LogUserLoggedIn();
+
+        var token = jwtTokenService.GenerateToken(user);
+        var expiryMinutes = int.Parse(configuration["JwtSettings:ExpiryInMinutes"] ?? "30");
+
+        return new AuthResponseDto
+        {
+            Success = true,
+            Message = "Se ha iniciado sesion correctamente.",
+            Token = token,
+            UserDetails = MapToUserDetailsDto(user),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes)
         };
-        byte[] hash = argon2.GetBytes(16);
-        return Convert.ToBase64String(hash) == storedHash;
     }
 
-    private string HashPassword(string password)
+    private UserResponseDto MapToUserResponseDto(User user)
     {
-        var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
+        var userRole = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE;
+        return new UserResponseDto
         {
-            DegreeOfParallelism = 4,
-            Iterations = 3,
-            MemorySize = 19456
+            Id = user.Id,
+            Name = user.Name,
+            Surname = user.SurName,
+            Username = user.UserName,
+            Email = user.Email,
+            ProfilePicture = _cloudinaryService.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
+            Phone = user.UserProfile?.Phone ?? string.Empty,
+            Role = userRole,
+            Status = user.Status,
+            IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
+            CreatedAt = user.CreatedAt,
+            UpdatedAt = user.UpdatedAt
         };
-        byte[] hash = argon2.GetBytes(16);
-        return Convert.ToBase64String(hash);
+    }
+
+    private UserDetailsDto MapToUserDetailsDto(User user)
+    {
+        return new UserDetailsDto
+        {
+            Id = user.Id,
+            Username = user.UserName,
+            ProfilePicture = _cloudinaryService.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
+            Role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE
+        };
+    }
+
+    public async Task<EmailResponseDto> VerifyEmailAsync(VerifyEmailDto verifyEmailDto)
+    {
+        var user = await userRepository.GetByEmailVerificationTokenAsync(verifyEmailDto.Token);
+        if (user == null || user.UserEmail == null)
+        {
+            return new EmailResponseDto
+            {
+                Success = false,
+                Message = "Token de verificación invalido o vencido."
+            };
+        }
+
+        user.UserEmail.EmailVerified = true;
+        user.Status = true;
+        user.UserEmail.EmailVerificationToken = null;
+        user.UserEmail.EmailVerificationTokenExpiry = null;
+        await userRepository.UpdateUserAsync(user);
+
+        try
+        {
+            await emailService.SendWelcomeEmailAsync(user.Email, user.UserName);
+        } catch (Exception ex)
+        {
+            logger.LogError(ex, "No se ha enviado el correo electronico de bienvenida a {Email}", user.Email);
+        }
+
+        logger.LogInformation("Se la enviado el correo electronico de bienvenida a {Username}", user.UserName);
+
+        return new EmailResponseDto
+        {
+            Success = true,
+            Message = "Correo electronico verificado correctamente.",
+            Data = new
+            {
+                email = user.Email,
+                verified = true
+            }
+        };
+    }
+
+    public async Task<EmailResponseDto> ResendVerificationEmailAsync(ResendVerificationDto resendDto)
+    {
+        var user = await userRepository.GetByEmailAsync(resendDto.Email);
+        if (user == null || user.UserEmail == null)
+        {
+            return new EmailResponseDto
+            {
+                Success = false,
+                Message = "Usuario no encontrado.",
+                Data = new { email = resendDto.Email, sent = false }
+            };
+        }
+        if (user.UserEmail.EmailVerified)
+        {
+            return new EmailResponseDto
+            {
+                Success = false,
+                Message = "El correo electronico verificado correctamente.",
+                Data = new { email = user.Email, verified = true }
+            };
+        }
+
+        var newToken = TokenGenerator.GenerateEmailVerificationToken();
+        user.UserEmail.EmailVerificationToken = newToken;
+        user.UserEmail.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
+        await userRepository.UpdateUserAsync(user);
+
+        try
+        {
+            await emailService.SendEmailVerificationAsync(user.Email, user.UserName, newToken);
+            return new EmailResponseDto
+            {
+                Success = true,
+                Message = "Se ha enviado el correo electronico de verificación.",
+                Data = new { email = user.Email, sent = true }
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "No se ha envado el correo electronico de verificación a {Email}", user.Email);
+            return new EmailResponseDto
+            {
+                Success = false,
+                Message = "Error: No ha enviado el correo electronico de verificación.",
+                Data = new { email = user.Email, sent = false }
+            };
+        }
+    }
+
+    public async Task<EmailResponseDto> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
+    {
+        var user = await userRepository.GetByEmailAsync(forgotPasswordDto.Email);
+        
+        if (user == null)
+        {
+            return new EmailResponseDto
+            {
+                Success = true,
+                Message = "Correo electronico existente, se ha enviado enlace de recuperacion.",
+                Data = new { email = forgotPasswordDto.Email, initiated = true }
+            };
+        }
+
+        var resetToken = TokenGenerator.GeneratePasswordResetToken();
+
+        if (user.UserPasswordReset == null)
+        {
+            user.UserPasswordReset = new UserPasswordReset
+            {
+                UserId = user.Id,
+                PasswordResetToken = resetToken,
+                PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1)
+            };
+        } else
+        {
+            user.UserPasswordReset.PasswordResetToken = resetToken;
+            user.UserPasswordReset.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
+        }
+        await userRepository.UpdateUserAsync(user);
+
+        try
+        {
+            await emailService.SendPasswordResetAsync(user.Email, user.UserName, resetToken);
+            logger.LogInformation("Se ha enviado el correo electronico de recuperacion de contraseña a {Email}", user.Email);
+        } catch (Exception ex)
+        {
+            logger.LogError(ex, "No se ha enviado el correo electronico de recuperacion de contraseña a {Email}", user.Email);
+        }
+
+        return new EmailResponseDto
+        {
+            Success = true,
+            Message = "Correo electronico existente, se ha enviado un enlace de recuperación",
+            Data = new { email = forgotPasswordDto.Email, initiated = true }
+        };
+    }
+
+    public async Task<EmailResponseDto> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+    {
+        var user = await userRepository.GetByPasswordResetTokenAsync(resetPasswordDto.Token);
+        if (user == null || user.UserPasswordReset == null)
+        {
+            return new EmailResponseDto
+            {
+                Success = false,
+                Message = "Token de recuperacion invalido o vencido",
+                Data = new { token = resetPasswordDto.Token, reset = false }
+            };
+        }
+
+        user.Password = passwordHashService.HashPassword(resetPasswordDto.NewPassword);
+        user.UserPasswordReset.PasswordResetToken = null;
+        user.UserPasswordReset.PasswordResetTokenExpiry = null;
+        await userRepository.UpdateUserAsync(user);
+
+        logger.LogInformation("Contraseña reestablecida en {Username}", user.UserName);
+
+        return new EmailResponseDto
+        {
+            Success = true,
+            Message = "Contraseña reestablecida correctamente.",
+            Data = new { email = user.Email, reset = true }
+        };
+    }
+
+    public async Task<UserResponseDto?> GetUserByIdAsync(string userId)
+    {
+        var user = await userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            return null;
+        }
+        return MapToUserResponseDto(user);
     }
 }
+

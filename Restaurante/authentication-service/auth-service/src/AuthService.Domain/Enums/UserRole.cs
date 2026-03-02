@@ -1,8 +1,7 @@
-namespace RestaurantManagementSystem.Domain.Enums;
+namespace AuthService.Domain.Enums;
 
 public enum UserRole
 {
-    Cliente,
-    AdministradorRestaurante,
-    AdministradorPlataforma
+    USER_ROLE,
+    ADMIN_ROLE
 }

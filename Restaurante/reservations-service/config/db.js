@@ -18,7 +18,7 @@ export const dbConnection = async () => {
     });
 
     mongoose.connection.on('open', () => {
-      console.log('MongoDB | conectado a la base de datos kinalSports');
+      console.log('MongoDB | conectado a la base de datos Heaven Flavor');
     });
 
     mongoose.connection.on('reconnected', () => {

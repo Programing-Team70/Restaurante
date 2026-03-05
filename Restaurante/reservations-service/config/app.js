@@ -8,7 +8,8 @@ import { dbConnection } from './db.js';
 import { corsOptions } from './cors.configuration.js';
 import { helmetOptions } from './helmet.configuration.js';
 import { requestLimit } from './rateLimit.configuration.js';
-import fieldRoutes from '../src/field.routes.js'
+import orderRoutes from '../src/order.routes.js'
+import reservationsRoutes from '../src/reservation.routes.js'
 
 const BASE_PATH = '/Heaven Flavor/reser';
 
@@ -22,11 +23,12 @@ const middlewares = (app) => {
 };
 
 const routes = (app) => {
-    app.use(`${BASE_PATH}/fields`, fieldRoutes);
+    app.use(`${BASE_PATH}/fields`, orderRoutes);
+    app.use(`${BASE_PATH}/fields`, reservationsRoutes);
     app.get(`${BASE_PATH}/health`, (reg, res) => {
         res.status(200).json({
             status: 'healthy',
-            service: 'Heaven Flavor Reservations Service.'
+            service: 'Heaven Flavor: Reservations Service.'
         })
     })
 

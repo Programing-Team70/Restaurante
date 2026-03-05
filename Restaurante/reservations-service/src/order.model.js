@@ -1,40 +1,74 @@
-import mongoose from "mongoose";
+'use strict';
 
-const orderSchema = new mongoose.Schema({
+import { Schema, model } from "mongoose";
+
+const orderSchema = new Schema(
+  {
   restaurantId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true
+    type: Schema.Types.ObjectId,
+    ref: "Restaurant",
+    required: [true, "El restaurante es requerido."]
   },
   reservationId: {
-    type: mongoose.Schema.Types.ObjectId
+    type: Schema.Types.ObjectId,
+    ref: "Reservation"
   },
   customerName: {
     type: String,
-    required: true
+    required: [true, "El nombre del cliente es requerido."],
+    trim: true,
+    maxLength: [100, "El nombre del cliente no puede exceder 100 caracteres."]
   },
   items: [
     {
       menuItemId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
+        type: Schema.Types.ObjectId,
+        ref: "MenuItem",
+        required: [true, "El plato del menú es requerido."]
       },
-      name: String,
+      name: {
+        type: String,
+        required: [true, "El nombre del plato es requerido."]
+      },
       quantity: {
         type: Number,
-        required: true
+        required: [true, "La cantidad es requerida."],
+        min: [1, "La cantidad debe ser al menos 1."]
       },
       price: {
         type: Number,
-        required: true
+        required: [true, "El precio del plato es requerido."],
+        min: [0, "El precio debe ser mayor o igual a 0."]
       }
     }
   ],
-  total: Number,
+  total: {
+    type: Number,
+    required: [true, "El total del pedido es requerido."],
+    min: [0, "El total no puede ser negativo."]
+  },
   status: {
     type: String,
     enum: ["en preparación", "listo", "entregado", "cancelado"],
     default: "en preparación"
+  },
+  isActive: {
+    type: Boolean,
+    default: true
   }
-}, { timestamps: true });
+},
+{ timestamps: true, versionKey: false, });
 
-export default mongoose.model("Order", orderSchema);
+orderSchema.pre(/^find/, function () {
+  this.where({ isActive: true });
+});
+
+orderSchema.pre("save", function () {
+  this.total = this.items.reduce((acc, item) => {
+    return acc + (item.quantity * item.price);
+  }, 0);
+});
+
+orderSchema.index({ isActive: 1 });
+
+export default model("Order", orderSchema);

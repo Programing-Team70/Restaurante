@@ -1,9 +1,14 @@
-import Reservation from "../models/reservation.model.js";
+import {
+  createReservationService,
+  updateReservationService,
+  cancelReservationService,
+  deleteReservationService,
+  getReservationsByRestaurantService
+} from "./reservation.service.js";
 
 export const createReservation = async (req, res) => {
   try {
-    const reservation = await Reservation.create(req.body);
-
+    const reservation = await createReservationService(req.body);
     res.status(201).json({
       message: "Reservación creada correctamente",
       reservation,
@@ -12,7 +17,6 @@ export const createReservation = async (req, res) => {
         text: "Tu reservación ha sido registrada"
       }
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -20,13 +24,14 @@ export const createReservation = async (req, res) => {
 
 export const updateReservation = async (req, res) => {
   try {
-    const updated = await Reservation.findByIdAndUpdate(
+    const updated = await updateReservationService(
       req.params.id,
-      req.body,
-      { new: true }
+      req.body
     );
-
-    res.json(updated);
+    res.json({
+      message: "Reservación actualizada",
+      updated
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -34,17 +39,27 @@ export const updateReservation = async (req, res) => {
 
 export const cancelReservation = async (req, res) => {
   try {
-    const cancelled = await Reservation.findByIdAndUpdate(
-      req.params.id,
-      { status: "cancelada" },
-      { new: true }
-    );
-
+    const cancelled = await cancelReservationService(req.params.id);
     res.json({
       message: "Reservación cancelada",
-      cancelled
+      cancelled,
+      notification: {
+        type: "RESERVATION_CANCELLED",
+        text: "Tu reservación ha sido cancelada"
+      }
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
+export const deleteReservation = async (req, res) => {
+  try {
+    const deleted = await deleteReservationService(req.params.id);
+    res.json({
+      message: "Reservación eliminada correctamente",
+      deleted
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -52,10 +67,9 @@ export const cancelReservation = async (req, res) => {
 
 export const getReservationsByRestaurant = async (req, res) => {
   try {
-    const reservations = await Reservation.find({
-      restaurantId: req.params.restaurantId
-    });
-
+    const reservations = await getReservationsByRestaurantService(
+      req.params.restaurantId
+    );
     res.json(reservations);
   } catch (error) {
     res.status(500).json({ message: error.message });

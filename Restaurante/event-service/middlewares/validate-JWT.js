@@ -34,7 +34,6 @@ export const validateJWT = (req, res, next) => {
     
         const decoded = jwt.verify(token, jwtConfig.secret, verifyOptions);
     
-        // Log para debug - remover en producción
         if (!decoded.role) {
         console.warn(
             `Token sin campo 'role' para usuario ${decoded.sub}. Payload:`,
@@ -43,10 +42,10 @@ export const validateJWT = (req, res, next) => {
         }
     
         req.user = {
-        id: decoded.sub, // userId del servicio de autenticación
-        jti: decoded.jti, // ID único del token
-        iat: decoded.iat, // Emitido en
-        role: decoded.role || 'USER_ROLE', // Rol del usuario (default: USER_ROLE)
+        id: decoded.sub,
+        jti: decoded.jti,
+        iat: decoded.iat,
+        role: decoded.role || 'USER_ROLE',
         };
     
         next();

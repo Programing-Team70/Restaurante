@@ -1,37 +1,55 @@
-import { body, param } from 'express-validator';
-import { validateJWT } from './validate-JWT.js';
-import { checkValidators } from './check-validators.js';
+import { body } from "express-validator";
+import { validateJWT } from "./validate-JWT.js";
+import { checkValidators } from "./check-validators.js";
 
-export const validateCreateField = [
+export const validateCreateMenu = [
     validateJWT,
-    body('restaurantName')
+    body('restaurant')
+        .notEmpty()
+        .withMessage('El restaurante es requerido.')
+        .isMongoId()
+        .withMessage('El ID del restaurante no es válido.'),
+    body('name')
         .trim()
         .notEmpty()
-        .withMessage('l nombre del restaurante es requerido.')
-        .isLength({ min: 2, max: 200 })
-        .withMessage('El nombre del restaurante no puede exceder 200 caracteres.'),
-    body('restaurantAddress')
+        .withMessage('El nombre del plato es requerido.')
+        .isLength({ max: 200 })
+        .withMessage('El nombre del plato no puede exceder 200 caracteres.'),
+    body('description')
         .trim()
         .notEmpty()
-        .withMessage('La direccion del restaurante es requerido.')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('La direccion del restaurante no puede exceder 100 caracteres.'),
-    body('restaurantSchedule')
+        .withMessage('La descripcion del plato es requerida.')
+        .isLength({ max: 500 })
+        .withMessage('La descripcion del plato no puede exceder 500 caracteres.'),
+    body('ingredients')
+        .isArray({ min: 1 })
+        .withMessage('Debe agregar al menos un ingrediente.'),
+    body('ingredients.*')
+        .isString()
         .trim()
         .notEmpty()
-        .withMessage('El horario del restaurante es requerido.')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('El horario del restaurante no puede exceder 100 caracteres.'),
-    body('restaurantCategory')
-        .trim()
+        .withMessage('Cada ingrediente debe ser un texto válido.'),
+    body('price')
         .notEmpty()
-        .withMessage('La categoria del restaurante es requerido.')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('La categoria del restaurante no puede exceder 100 caracteres.'),
-    body('averagePrice')
-        .notEmpty()
-        .withMessage('El precio promedio del restaurante es requerido.')
+        .withMessage('El precio del plato es requerido.')
         .isFloat({ min: 0 })
-        .withMessage('El precio promedio debe ser mayor o igual a 0.'),
-    checkValidators,
+        .withMessage('El precio debe ser mayor o igual a 0.'),
+    body('type')
+        .notEmpty()
+        .withMessage('El tipo del plato es requerido.')
+        .isIn([
+        "entrada",
+        "plato fuerte",
+        "postre",
+        "bebida",
+        "acompañamiento",
+        "combo",
+        "otro"
+        ])
+        .withMessage('El tipo de plato no es válido.'),
+    body('available')
+        .optional()
+        .isBoolean()
+        .withMessage('El valor de disponibilidad debe ser verdadero o falso.'),
+    checkValidators
 ];

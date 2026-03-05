@@ -23,12 +23,12 @@ app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "10kb" }));
 
-app.use("/api/restaurants", restaurantRoutes);
-app.use("/api/tables", tableRoutes);
-app.use("/api/menu", menuRoutes);
+app.use("/res/restaurants", restaurantRoutes);
+app.use("/res/tables", tableRoutes);
+app.use("/res/menu", menuRoutes);
 
 app.get("/", (req, res) => {
-  res.json({ message: "API Restaurant funcionando correctamente 🚀" });
+  res.json({ message: "API Restaurant funcionando correctamente" });
 });
 
 app.use((req, res, next) => {
@@ -46,17 +46,17 @@ app.use((err, req, res, next) => {
 });
 
 process.on("unhandledRejection", (err) => {
-  console.error("UNHANDLED REJECTION 💥", err);
+  console.error("UNHANDLED REJECTION", err);
   process.exit(1);
 });
 
 process.on("uncaughtException", (err) => {
-  console.error("UNCAUGHT EXCEPTION 💥", err);
+  console.error("UNCAUGHT EXCEPTION", err);
   process.exit(1);
 });
 
 const PORT = process.env.PORT || 3021;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

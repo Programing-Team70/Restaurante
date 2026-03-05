@@ -1,5 +1,5 @@
 export const errorHandler = (err, req, res) => {
-    console.error(`Error in Admin Server: ${err.message}`);
+    console.error(`Error in Restaurant Service: ${err.message}`);
     console.error(`Stack trace: ${err.stack}`);
     console.error(`Request: ${req.method} ${req.path}`);
 

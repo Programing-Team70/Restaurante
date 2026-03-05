@@ -62,7 +62,12 @@ const restaurantSchema = new Schema(
                 }
             }
         ],
-        default: ['fields/restaurant_uur74f']
+        default: [
+            {
+                url: "https://res.cloudinary.com/dsbibfrfc/image/upload/Heaven_flavor",
+                public_id: "restaurant_uur74f"
+            }
+        ]
     }
 }, { timestamps: true, versionKey: false, });
 

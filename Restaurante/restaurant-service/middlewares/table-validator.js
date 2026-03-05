@@ -4,34 +4,38 @@ import { checkValidators } from './check-validators.js';
 
 export const validateCreateField = [
     validateJWT,
-    body('restaurantName')
+    body('restaurant')
+        .notEmpty()
+        .withMessage('El restaurante es requerido.')
+        .isMongoId()
+        .withMessage('El ID del restaurante no es válido.'),
+    body('capacity')
+        .notEmpty()
+        .withMessage('La capacidad de la mesa es requerida.')
+        .isFloat({ min: 1 })
+        .withMessage('La capacidad de la mesa debe ser mayor o igual a 1.'),
+    body('location')
         .trim()
         .notEmpty()
-        .withMessage('l nombre del restaurante es requerido.')
+        .withMessage('La localizacion de la mesa es requerida.')
         .isLength({ min: 2, max: 200 })
-        .withMessage('El nombre del restaurante no puede exceder 200 caracteres.'),
-    body('restaurantAddress')
-        .trim()
+        .withMessage('La localizacion no puede exceder 200 caracteres.'),
+    body('availableHours')
+        .isArray({ min: 1 })
+        .withMessage('Debe enviar al menos un horario disponible.'),
+    body('availableHours.*.start')
         .notEmpty()
-        .withMessage('La direccion del restaurante es requerido.')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('La direccion del restaurante no puede exceder 100 caracteres.'),
-    body('restaurantSchedule')
-        .trim()
+        .withMessage('El horario de inicio es requerido.')
+        .isLength({ max: 100 })
+        .withMessage('El horario de inicio no puede exceder 100 caracteres.'),
+    body('availableHours.*.end')
         .notEmpty()
-        .withMessage('El horario del restaurante es requerido.')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('El horario del restaurante no puede exceder 100 caracteres.'),
-    body('restaurantCategory')
-        .trim()
-        .notEmpty()
-        .withMessage('La categoria del restaurante es requerido.')
-        .isLength({ min: 2, max: 100 })
-        .withMessage('La categoria del restaurante no puede exceder 100 caracteres.'),
-    body('averagePrice')
-        .notEmpty()
-        .withMessage('El precio promedio del restaurante es requerido.')
-        .isFloat({ min: 0 })
-        .withMessage('El precio promedio debe ser mayor o igual a 0.'),
+        .withMessage('El horario de fin es requerido.')
+        .isLength({ max: 100 })
+        .withMessage('El horario de fin no puede exceder 100 caracteres.'),
+    body('isAvailable')
+        .optional()
+        .isBoolean()
+        .withMessage('El valor de disponibilidad debe ser verdadero o falso.'),
     checkValidators,
 ];

@@ -1,9 +1,10 @@
-'use strict';
+"use strict";
 
 import {
   createOrderService,
   updateOrderStatusService,
-  getOrdersByRestaurantService
+  getOrdersByRestaurantService,
+  deleteOrderService,
 } from "./order.service.js";
 
 export const createOrder = async (req, res) => {
@@ -14,12 +15,12 @@ export const createOrder = async (req, res) => {
       order,
       notification: {
         type: "ORDER_CREATED",
-        text: "Tu pedido está en preparación"
-      }
+        text: "Tu pedido está en preparación",
+      },
     });
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -28,32 +29,30 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const updated = await updateOrderStatusService(
       req.params.id,
-      req.body.status
+      req.body.status,
     );
     res.json({
       message: "Estado actualizado",
       updated,
       notification: {
         type: "ORDER_STATUS_UPDATE",
-        text: `Tu pedido ahora está: ${req.body.status}`
-      }
+        text: `Tu pedido ahora está: ${req.body.status}`,
+      },
     });
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 };
 
 export const getOrdersByRestaurant = async (req, res) => {
   try {
-    const orders = await getOrdersByRestaurantService(
-      req.params.restaurantId
-    );
+    const orders = await getOrdersByRestaurantService(req.params.restaurantId);
     res.json(orders);
   } catch (error) {
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -63,7 +62,7 @@ export const deleteOrder = async (req, res) => {
     const deleted = await deleteOrderService(req.params.id);
     res.json({
       message: "Pedido eliminado correctamente",
-      deleted
+      deleted,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -1,10 +1,11 @@
-'use strict';
+"use strict";
 
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import { swaggerDocs, swaggerUi } from "./config/documentation.js";
 
 import { dbConnection } from "./config/db.js";
 
@@ -14,16 +15,19 @@ import orderRoutes from "./src/order.routes.js";
 dotenv.config();
 
 const app = express();
+app.disable("etag");
 dbConnection();
 
-app.use(cors({
-  origin: "*",
-}));
-app.use(helmet());
 app.use(
-  morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+  cors({
+    origin: "*",
+  }),
+);
+app.use(helmet());
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "10kb" }));
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/res/reservations", reservationRoutes);
 app.use("/res/orders", orderRoutes);
 

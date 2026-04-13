@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import { swaggerDocs, swaggerUi } from "./config/documentation.js";
 
 import { dbConnection } from "./config/db.js";
 
@@ -15,14 +16,17 @@ dotenv.config();
 const app = express();
 dbConnection();
 
-app.use(cors({
-  origin: "*",
-}));
+app.use(
+  cors({
+    origin: "*",
+  }),
+);
 
 app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "10kb" }));
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/res/restaurants", restaurantRoutes);
 app.use("/res/tables", tableRoutes);
 app.use("/res/menu", menuRoutes);

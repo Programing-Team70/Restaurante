@@ -2,7 +2,7 @@ import {
   createTableService,
   getTablesByRestaurantService,
   updateTableService,
-  deleteTableService
+  deleteTableService,
 } from "./table.service.js";
 
 export const createTable = async (req, res) => {
@@ -10,12 +10,12 @@ export const createTable = async (req, res) => {
     const table = await createTableService(req.body);
     return res.status(201).json({
       success: true,
-      table
+      table,
     });
   } catch (error) {
     return res.status(400).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -26,30 +26,27 @@ export const getTablesByRestaurant = async (req, res) => {
     return res.status(200).json({
       success: true,
       results: tables.length,
-      tables
+      tables,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
 
 export const updateTable = async (req, res) => {
   try {
-    const updated = await updateTableService(
-      req.params.id,
-      req.body
-    );
+    const updated = await updateTableService(req.params.id, req.body);
     return res.status(200).json({
       success: true,
-      table: updated
+      table: updated,
     });
   } catch (error) {
     return res.status(404).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -60,12 +57,12 @@ export const deleteTable = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Mesa desactivada correctamente",
-      table
+      table,
     });
   } catch (error) {
     return res.status(404).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };

@@ -13,63 +13,78 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const MIMETYPES = [
-    "image/jpg",
-    "image/png",
-    "image/jpeg",
-    "image/webp"
-];
-
+const MIMETYPES = ["image/jpg", "image/png", "image/jpeg", "image/webp"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const createCloudinaryUploader = (folder) => {
     const storage = new CloudinaryStorage({
         cloudinary,
-        params: (req, file) => {
-        const fileExt = extname(file.originalname);
-        const baseName = file.originalname.replace(fileExt, "");
-        const safeBase = baseName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/gi, "-")
-            .replace(/^-+|-+$/g, "");
-        const shortUuid = uuidv4().substring(0, 8);
-        const publicId = `${safeBase}-${shortUuid}`;
-        return {
-            folder,
-            public_id: publicId,
-            allowed_formats: ["jpg", "jpeg", "png", "webp"],
-            transformation: [{ width: 1000, height: 1000, crop: "limit" }],
-            resource_type: "image"
-        };
+        params: async (req, file) => {
+            const fileExt = extname(file.originalname);
+            const baseName = file.originalname.replace(fileExt, "");
+            const safeBase = baseName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/gi, "-")
+                .replace(/^-+|-+$/g, "");
+                
+            const shortUuid = uuidv4().substring(0, 8);
+            return {
+                folder,
+                public_id: `${safeBase}-${shortUuid}`,
+                allowed_formats: ["jpg", "jpeg", "png", "webp"],
+                transformation: [{ width: 1000, height: 1000, crop: "limit" }],
+                resource_type: "image"
+            };
         }
     });
     return multer({
         storage,
         fileFilter: (req, file, cb) => {
-        if (MIMETYPES.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error(`Solo se permiten imágenes: ${MIMETYPES.join(", ")}`));
-        }
+            if (MIMETYPES.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error(`Formato invalido. Solo se aceptan: ${MIMETYPES.join(", ")}`));
+            }
         },
-        limits: {
-        fileSize: MAX_FILE_SIZE
-        }
+        limits: {fileSize: MAX_FILE_SIZE}
     });
 };
 
-export const uploadImages = createCloudinaryUploader("Heaven_flavor");
+const uploader = createCloudinaryUploader("Heaven_flavor");
+export const uploadImages = (req, res, next) => {
+    uploader.array('images', 5)(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ success: false, message: `Error al cargar: ${err.message}` });
+        } else if (err) {
+            return res.status(400).json({ success: false, message: err.message });
+        }
+        next();
+    });
+};
 
 export const createField = async (req, res) => {
     try {
-        const imageUrls = req.files.map(file => file.path);
+        const imageUrls = req.files?req.files.map(file => file.path) : [];
+        if (imageUrls.length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Es necesario subir al menos una imagen." 
+            });
+        }
         const newField = await Field.create({
             ...req.body,
             images: imageUrls
         });
-        res.status(201).json(newField);
+        res.status(201).json({
+            success: true,
+            data: newField
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: "Error interno al crear el registro.",
+            error: error.message 
+        });
     }
 };
 

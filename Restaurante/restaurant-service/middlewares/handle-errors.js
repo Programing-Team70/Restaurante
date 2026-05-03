@@ -8,10 +8,9 @@ export const errorHandler = (err, req, res) => {
             field: error.path,
             message: error.message,
         }));
-    
         return res.status(400).json({
             success: false,
-            message: 'Error de validación',
+            message: 'Error de validación.',
             errors,
         });
     }
@@ -20,7 +19,7 @@ export const errorHandler = (err, req, res) => {
         const field = Object.keys(err.keyValue)[0];
             return res.status(400).json({
             success: false,
-            message: `${field} ya existe`,
+            message: `${field} ya existe.`,
             error: 'DUPLICATE_FIELD',
         });
     }
@@ -28,24 +27,8 @@ export const errorHandler = (err, req, res) => {
     if (err.name === 'CastError') {
         return res.status(400).json({
             success: false,
-            message: 'Formato de ID inválido',
+            message: 'Formato de ID inválido.',
             error: 'INVALID_ID',
-        });
-    }
-    
-    if (err.name === 'JsonWebTokenError') {
-        return res.status(401).json({
-            success: false,
-            message: 'Token inválido',
-            error: 'INVALID_TOKEN',
-        });
-    }
-    
-    if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({
-            success: false,
-            message: 'Token expirado',
-            error: 'TOKEN_EXPIRED',
         });
     }
     
@@ -59,7 +42,7 @@ export const errorHandler = (err, req, res) => {
     
     res.status(500).json({
         success: false,
-        message: 'Error interno del servidor',
+        message: 'Error interno del servidor.',
         error: 'INTERNAL_SERVER_ERROR',
         ...(process.env.NODE_ENV === 'development' && {
             details: err.message,

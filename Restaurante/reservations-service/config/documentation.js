@@ -10,7 +10,7 @@ const swaggerOptions = {
   swaggerDefinition: {
     openapi: "3.0.0",
     info: {
-      title: "Reservations Service",
+      title: "Heaven Flavor - Reservations Service",
       version: "1.0.0",
       description:
         "Documentación de los servicios de reservaciones para el sistema de Restaurantes",
@@ -19,43 +19,47 @@ const swaggerOptions = {
         email: "programingteam70@gmail.com",
       },
     },
+    servers: [
+      {
+        url: "http://localhost:3023",
+        description: "Servidor local de Reservaciones",
+      },
+    ],
     components: {
       schemas: {
-        Ord: {
-          type: "object",
-          properties: {
-            status: {
-              type: "enum",
-              description:
-                "Estado (en preparación, listo, entregado, cancelado)",
-              example: "listo",
-            },
-          },
-        },
         Order: {
           type: "object",
           properties: {
             restaurantId: {
               type: "string",
-              description: "ID del restaurante asociado",
               example: "67c5a8c2f3a1c3e21c9d1123",
             },
             reservationId: {
               type: "string",
-              description: "ID de la reservación vinculada a la orden",
               example: "67c5a8c2f3a1c3e21c9d1150",
             },
             customerName: {
               type: "string",
-              description: "Nombre del cliente que realiza el pedido",
+              minLength: 3,
+              maxLength: 200,
               example: "Juan Pérez",
             },
             items: {
               type: "array",
-              items: {
-                $ref: "#/components/schemas/OrderItem",
-              },
+              minItems: 1,
+              items: { $ref: "#/components/schemas/OrderItem" },
             },
+            total: {
+              type: "number",
+              example: 90.00,
+            },
+            status: {
+              type: "string",
+              enum: ["en preparación", "listo", "entregado", "cancelado"],
+              default: "en preparación",
+            },
+            isActive: { type: "boolean", default: true },
+            isAvalible: { type: "boolean", default: true },
           },
         },
         OrderItem: {
@@ -63,23 +67,21 @@ const swaggerOptions = {
           properties: {
             menuItemId: {
               type: "string",
-              description: "ID del platillo o bebida",
               example: "67c5a8c2f3a1c3e21c9d1200",
-            },
-            name: {
-              type: "string",
-              description: "Nombre del producto",
-              example: "Pizza Margarita",
             },
             quantity: {
               type: "integer",
-              description: "Cantidad solicitada",
+              minimum: 1,
               example: 2,
             },
             price: {
               type: "number",
-              description: "Precio unitario",
-              example: 45,
+              minimum: 0,
+              example: 45.00,
+            },
+            subtotal: {
+              type: "number",
+              example: 90.00,
             },
           },
         },
@@ -88,74 +90,65 @@ const swaggerOptions = {
           properties: {
             restaurantId: {
               type: "string",
-              description: "ID del restaurante",
               example: "67c5a8c2f3a1c3e21c9d1123",
             },
             tableId: {
               type: "string",
-              description: "ID de la mesa asignada",
               example: "67c5a8c2f3a1c3e21c9d1140",
-            },
-            orderId: {
-              type: "string",
-              description: "ID de la orden asociada a la reserva",
-              example: "67c5a8c2f3a1c3e21c9d1150",
             },
             customerName: {
               type: "string",
+              minLength: 3,
+              maxLength: 200,
               example: "Juan Pérez",
             },
             customerPhone: {
               type: "string",
+              pattern: "^\\d{8}$",
               example: "55512345",
             },
             type: {
               type: "string",
-              description: "Tipo de reserva (mesa, evento, etc.)",
+              enum: ["mesa", "domicilio", "para llevar"],
               example: "mesa",
             },
             date: {
               type: "string",
               format: "date-time",
-              description: "Fecha y hora de la reserva en formato ISO",
-              example: "2026-03-05T19:00:00.000Z",
+              example: "2026-05-10T19:00:00.000Z",
             },
             guests: {
               type: "integer",
-              description: "Número de comensales",
+              minimum: 1,
+              maximum: 50,
+              default: 1,
               example: 4,
             },
             status: {
               type: "string",
-              enum: ["pendiente", "confirmada", "cancelada"],
-              example: "confirmada",
+              enum: ["pendiente", "confirmada", "en curso", "completada", "cancelada"],
+              default: "pendiente",
             },
             notes: {
               type: "string",
-              description: "Observaciones adicionales",
-              example: "Mesa cerca de la ventana",
+              maxLength: 500,
+              example: "Cerca de la ventana, por favor.",
             },
+            isActive: { type: "boolean", default: true },
+            isAvalible: { type: "boolean", default: true },
           },
         },
       },
     },
-    servers: [
-      {
-        url: "http://localhost:3023",
-        description: "Servidor local de Reservaciones",
-      },
-    ],
     tags: [
-      {
-        name: "Reservations",
-        description:
-          "Endpoints para la gestión de reservas de mesas y clientes",
-      },
+      { name: "Reservations", description: "Endpoints para la gestión de reservas de mesas y clientes" },
+      { name: "Order", description: "Gestión de órdenes y pedidos" },
     ],
   },
   apis: [
-    path.join(__dirname, "../src/*.js"),
-    path.join(__dirname, "./src/*.js"),
+    "./src/Router/*.js",          
+    "./src/Router/**/*.js",       
+    "./app.js"  
   ],
 };
 

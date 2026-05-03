@@ -5,65 +5,62 @@ import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
 import { dbConnection } from "./db.js";
-import { corsOptions } from "./configuration.js";
-import { helmetOptions } from "./helmets.js";
+import { options } from "./configuration.js";
+import { helmets } from "./helmets.js";
 import { requestLimit } from "./rateLimit.js";
-import eventRoutes from "../src/event.routes.js";
+import event from "../src/Routes/event.routes.js";
 import { swaggerDocs, swaggerUi } from "./documentation.js";
 
-const BASE_PATH = "/Heaven Flavor/even";
+const BASE_PATH = "/heaven-flavor/even";
+
 const middlewares = (app) => {
   app.use(express.urlencoded({ extended: false, limit: "10mb" }));
   app.use(express.json({ limit: "10mb" }));
-  app.use(cors(corsOptions));
+  app.use(cors(options));
   app.use(morgan("dev"));
-  app.use(helmet(helmetOptions));
+  app.use(helmet(helmets));
   app.use(requestLimit);
+  app.use(`${BASE_PATH}/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 };
 
 const routes = (app) => {
-  app.use(
-    `${BASE_PATH}/api-docs`,
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerDocs),
-  );
-
-  app.use(`${BASE_PATH}/events`, eventRoutes);
-
-  app.get(`${BASE_PATH}/health`, (req, res) => {
+  app.use(`${BASE_PATH}/event`, event);
+  app.get(`${BASE_PATH}/health`, (reg, res) => {
     res.status(200).json({
-      status: "healthy",
+      status: "Conectado.",
       service: "Heaven Flavor: Event Service.",
     });
   });
-
   app.use((req, res) => {
     res.status(404).json({
-      success: false,
-      message: "Ruta no existente en el servicio de eventos.",
+      succes: false,
+      massage: "Heaven Flavor: Ruta no existente.",
     });
+  });
+  app.use((err, req, res, next) => {
+      console.error(err.stack);
+      res.status(err.statusCode || 500).json({
+          success: false,
+          message: err.message || "Error interno del servidor",
+      });
   });
 };
 
 export const initServer = async () => {
   const app = express();
-  const PORT = process.env.PORT || 3022;
-
+  const PORT = process.env.PORT;
   app.set("trust proxy", 1);
-
   try {
     middlewares(app);
     await dbConnection();
     routes(app);
-
     app.listen(PORT, () => {
-      console.log(
-        `Heaven Flavor: Event Service se esta ejecutando en el puerto: ${PORT}`,
-      );
-      console.log(`Health Check: http://localhost:${PORT}${BASE_PATH}/health`);
+      console.log(`Heaven Flavor: Ejecutando en el puerto: ${PORT}`);
+      console.log(`Conectado http://localhost:${PORT}${BASE_PATH}/health`);
+      console.log(`Docs:  http://localhost:${PORT}${BASE_PATH}/api-docs`);
     });
   } catch (error) {
-    console.error(`Error al iniciar el servidor de eventos: ${error.message}`);
+    console.error(`Heaven Flavor: Error al iniciar el servidor: ${error.message}`);
     process.exit(1);
   }
 };

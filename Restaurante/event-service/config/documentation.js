@@ -20,6 +20,11 @@ const swaggerOptions = {
         email: "programingteam70@gmail.com",
       },
     },
+    servers: [
+      {
+        url: "http://localhost:3022",
+      },
+    ],
     components: {
       schemas: {
         event: {
@@ -76,22 +81,14 @@ const swaggerOptions = {
         },
       },
     },
-    servers: [
-      {
-        url: "http://localhost:3022",
-      },
-    ],
     tags: [
-      {
-        name: "Events",
-        description:
-          "Endpoints para la gestión de eventos y servicios de restaurante",
-      },
+      { name: "Events", description: "Endpoints para la gestión de eventos y servicios de restaurante" },
     ],
   },
   apis: [
-    path.join(__dirname, "../src/*.js"),
-    path.join(__dirname, "./src/*.js"),
+    "./src/Routes/*.js",          
+    "./src/Routes/**/*.js",       
+    "./app.js"  
   ],
 };
 

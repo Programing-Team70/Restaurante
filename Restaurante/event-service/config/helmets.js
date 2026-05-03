@@ -1,6 +1,6 @@
 'use strict';
 
-export const helmetOptions = {
+export const helmets = {
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],

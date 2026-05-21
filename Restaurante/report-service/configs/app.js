@@ -9,6 +9,7 @@ import { options } from "./configuration.js";
 import { helmets } from "./helmets.js";
 import { requestLimit } from "./rateLimit.js";
 import reportRoutes from "../src/routes/report.routes.js";
+import statisticsRoutes from "../src/routes/statistics.routes.js";
 
 const BASE_PATH = "/heaven-flavor/even";
 
@@ -24,6 +25,7 @@ const middlewares = (app) => {
 
 const routes = (app) => {
   app.use(`${BASE_PATH}/reports`, reportRoutes);
+  app.use(`${BASE_PATH}/statistics`, statisticsRoutes);
   app.get(`${BASE_PATH}/health`, (reg, res) => {
     res.status(200).json({
       status: "Conectado.",
@@ -32,8 +34,8 @@ const routes = (app) => {
   });
   app.use((req, res) => {
     res.status(404).json({
-      succes: false,
-      massage: "Heaven Flavor: Ruta no existente.",
+      success: false,
+      message: "Heaven Flavor: Ruta no existente.",
     });
   });
   app.use((err, req, res, next) => {

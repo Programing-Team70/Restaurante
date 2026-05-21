@@ -91,13 +91,12 @@ const reportSchema = new Schema(
 
 }, { timestamps: true, versionKey: false });
 
-reportSchema.pre(/^find/, function(next) {
+reportSchema.pre(/^find/, function() {
     this.where({ isActive: true });
-    next();
 });
 
 // Evitar duplicados
-reportSchema.pre("validate", async function(next) {
+reportSchema.pre("validate", async function() {
     const existing = await this.constructor.findOne({
         restaurantId: this.restaurantId,
         reportType: this.reportType,
@@ -107,10 +106,8 @@ reportSchema.pre("validate", async function(next) {
     });
 
     if (existing) {
-        return next(new Error("Ya existe un reporte con ese rango y tipo."));
+        throw new Error("Ya existe un reporte con ese rango y tipo.");
     }
-
-    next();
 });
 
 reportSchema.index({ restaurantId: 1, reportType: 1 });

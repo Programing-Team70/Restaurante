@@ -61,12 +61,11 @@ const statisticsSchema = new Schema(
 
 }, { timestamps: true, versionKey: false });
 
-statisticsSchema.pre(/^find/, function(next) {
+statisticsSchema.pre(/^find/, function() {
     this.where({ isActive: true });
-    next();
 });
 
-statisticsSchema.pre("validate", async function(next) {
+statisticsSchema.pre("validate", async function() {
     const exists = await this.constructor.findOne({
         restaurantId: this.restaurantId,
         date: this.date,
@@ -75,10 +74,8 @@ statisticsSchema.pre("validate", async function(next) {
     });
 
     if (exists) {
-        return next(new Error("Ya existe estadística para esa fecha y periodo."));
+        throw new Error("Ya existe estadística para esa fecha y periodo.");
     }
-
-    next();
 });
 
 statisticsSchema.index({ restaurantId: 1, date: 1, period: 1 });

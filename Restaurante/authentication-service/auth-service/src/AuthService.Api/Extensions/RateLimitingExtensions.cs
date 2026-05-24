@@ -16,8 +16,9 @@ public static class RateLimitingExtensions
                         AutoReplenishment = true,
                         PermitLimit = 5,
                         Window = TimeSpan.FromMinutes(1)
-                    }));
-
+                    }
+                )
+            );
             options.AddPolicy("ApiPolicy", context =>
                 RateLimitPartition.GetTokenBucketLimiter(
                     partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown", factory: partition => new TokenBucketRateLimiterOptions
@@ -28,15 +29,15 @@ public static class RateLimitingExtensions
                         ReplenishmentPeriod = TimeSpan.FromMinutes(1),
                         TokensPerPeriod = 20,
                         AutoReplenishment = true
-                    }));
-
+                    }
+                )
+            );
             options.OnRejected = async (context, token) =>
             {
                 context.HttpContext.Response.StatusCode = 429;
                 await context.HttpContext.Response.WriteAsync("Error: Limite de solicitudes alcanzado, intentelo de nuevo mas tarde.", token);
             };
         });
-
         return services;
     }
 }

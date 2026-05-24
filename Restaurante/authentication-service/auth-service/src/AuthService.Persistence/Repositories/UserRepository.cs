@@ -11,7 +11,6 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     public async Task<User> GetByIdAsync(string id)
     {
         var user = await context.Users
-            .Include(u => u.UserProfile)
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
@@ -23,7 +22,6 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await context.Users
-            .Include(u => u.UserProfile)
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
@@ -34,7 +32,6 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     public async Task<User?> GetByUsernameAsync(string username)
     {
         return await context.Users
-            .Include(u => u.UserProfile)
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
@@ -45,7 +42,6 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     public async Task<User?> GetByEmailVerificationTokenAsync(string token)
     {
         return await context.Users
-            .Include(u => u.UserProfile)
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
@@ -58,7 +54,6 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     public async Task<User?> GetByPasswordResetTokenAsync(string token)
     {
         return await context.Users
-            .Include(u => u.UserProfile)
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)

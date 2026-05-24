@@ -11,6 +11,7 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
+
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -26,7 +27,6 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-
         var response = exception switch
         {
             BusinessException businessEx => new ErrorResponse
@@ -57,7 +57,6 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
         };
 
         context.Response.StatusCode = response.StatusCode;
-
         var unified = new
         {
             success = false,
@@ -74,7 +73,6 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
     {
         var message = ex.Message ?? string.Empty;
         var lower = message.ToLowerInvariant();
-
         if (lower.Contains("not found"))
         {
             return new ErrorResponse
@@ -93,7 +91,6 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
                 Detail = message
             };
         }
-
         return new ErrorResponse
         {
             StatusCode = (int)HttpStatusCode.BadRequest,

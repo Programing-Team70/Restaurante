@@ -5,19 +5,18 @@ namespace AuthService.Application.Services;
 
 public static class UuidGenerator
 {
-    // Caracteres seguros (sin 0, O, I, l para evitar confusión)
     private static readonly string Alphabet = "123456789ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
 
-    public static string GenerateShortUUID()
+    private static string GenerateRandomString(int length)
     {
         using var rng = RandomNumberGenerator.Create();
-        var bytes = new byte[12];
+        var bytes = new byte[length];
         rng.GetBytes(bytes);
 
-        var result = new StringBuilder(12);
-        for (int i = 0; i < 12; i++)
+        var result = new StringBuilder(length);
+        foreach (var b in bytes)
         {
-            result.Append(Alphabet[bytes[i] % Alphabet.Length]);
+            result.Append(Alphabet[b % Alphabet.Length]);
         }
 
         return result.ToString();
@@ -25,24 +24,35 @@ public static class UuidGenerator
 
     public static string GenerateUserId()
     {
-        return $"usr_{GenerateShortUUID()}";
+        return $"usr_{GenerateRandomString(12)}";
     }
 
     public static string GenerateRoleId()
     {
-        return $"rol_{GenerateShortUUID()}";
+        return $"rol_{GenerateRandomString(12)}";
     }
 
     public static bool IsValidUserId(string? id)
     {
-        if (string.IsNullOrEmpty(id))
+        if (string.IsNullOrWhiteSpace(id))
             return false;
 
-        // Debe empezar con usr_ y tener 16 caracteres en total (usr_ + 12 caracteres)
         if (id.Length != 16 || !id.StartsWith("usr_"))
             return false;
 
-        var idPart = id[4..]; // Obtener solo la parte después de "usr_"
+        var idPart = id[4..]; 
+        return idPart.All(c => Alphabet.Contains(c));
+    }
+
+    public static bool IsValidRoleId(string? id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return false;
+
+        if (id.Length != 16 || !id.StartsWith("rol_"))
+            return false;
+
+        var idPart = id[4..];
         return idPart.All(c => Alphabet.Contains(c));
     }
 }

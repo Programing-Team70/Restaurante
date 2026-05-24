@@ -30,7 +30,6 @@ public class User
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public UserProfile UserProfile { get; set; } = null!;
     public ICollection<UserRole> UserRoles { get; set; } = [];
     public UserEmail UserEmail { get; set; } = null!;
     public UserPasswordReset UserPasswordReset { get; set; } = null!;

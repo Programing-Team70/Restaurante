@@ -15,10 +15,8 @@ public class FileDataModelBinder : IModelBinder
         {
             return Task.CompletedTask;
         }
-
         var request = bindingContext.HttpContext.Request;
         var file = request.Form.Files.GetFile(bindingContext.FieldName);
-
         if (file != null && file.Length > 0)
         {
             var fileData = new FormFileAdapter(file);
@@ -27,7 +25,6 @@ public class FileDataModelBinder : IModelBinder
         {
             bindingContext.Result = ModelBindingResult.Success(null);
         }
-        
         return Task.CompletedTask;
     }
 }
@@ -40,7 +37,6 @@ public class FileDataModelBinderProvider : IModelBinderProvider
         {
             return new FileDataModelBinder();
         }
-
         return null;
     }
 }

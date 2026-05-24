@@ -55,7 +55,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         var subject = "¡Bienvenido a Kinal Sports!";
 
         var body = $@"
-            <h2>¡Bienvenido a Kinal Sports, {username}!</h2>
+            <h2>¡Bienvenido a Heaven Flavor, {username}!</h2>
             <p>Tu cuenta ha sido verificada y activada exitosamente.</p>
             <p>Ahora puedes disfrutar de todas las funciones de nuestra plataforma.</p>
             <p>Si tienes alguna pregunta, no dudes en contactar a nuestro equipo de soporte.</p>
@@ -71,15 +71,13 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
 
         try
         {
-            // Verificar si el email está habilitado
             var enabled = bool.Parse(smtpSettings["Enabled"] ?? "true");
             if (!enabled)
             {
-                logger.LogInformation("El envío de emails está deshabilitado en la configuración. Omitiendo envío");
+                logger.LogInformation("El envío de emails está deshabilitado. Omitiendo envío.");
                 return;
             }
 
-            // Validar configuración
             var host = smtpSettings["Host"];
             var portString = smtpSettings["Port"];
             var username = smtpSettings["Username"];
@@ -89,89 +87,51 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
 
             if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                logger.LogError("La configuración SMTP no está configurada correctamente");
-                throw new InvalidOperationException("La configuración SMTP no está configurada correctamente");
+                throw new InvalidOperationException("La configuración SMTP es incompleta.");
             }
-
-            // Avoid logging sensitive SMTP details
 
             var port = int.Parse(portString ?? "587");
-
             using var client = new SmtpClient();
+            client.Timeout = int.Parse(smtpSettings["Timeout"] ?? "30000");
 
-            // Configurar timeout
-            var timeoutMs = int.Parse(smtpSettings["Timeout"] ?? "30000");
-            client.Timeout = timeoutMs;
-
-            try
+            var ignoreCertErrors = bool.Parse(smtpSettings["IgnoreCertificateErrors"] ?? "false");
+            if (ignoreCertErrors)
             {
-                // Configurar validación de certificados SSL
-                var ignoreCertErrors = bool.Parse(smtpSettings["IgnoreCertificateErrors"] ?? "false");
-                if (ignoreCertErrors)
-                {
-                    logger.LogWarning("Validación de certificados SSL deshabilitada. Solo usar en desarrollo.");
-                    client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-                }
-                // Verificar configuración de SSL implícito
-                var useImplicitSsl = bool.Parse(smtpSettings["UseImplicitSsl"] ?? "false");
-
-                // Configuración específica por puerto y SSL
-                if (useImplicitSsl || port == 465)
-                {
-                    await client.ConnectAsync(host, port, SecureSocketOptions.SslOnConnect);
-                }
-                else if (port == 587)
-                {
-                    await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
-                }
-                else
-                {
-                    await client.ConnectAsync(host, port, SecureSocketOptions.Auto);
-                }
-
-                // Autenticación
-                await client.AuthenticateAsync(username, password);
-
-                // Crear mensaje con MimeKit
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(fromName, fromEmail));
-                message.To.Add(new MailboxAddress("", to));
-                message.Subject = subject;
-                message.Body = new TextPart("html") { Text = body };
-
-                // Enviar
-                await client.SendAsync(message);
-                logger.LogInformation("Email enviado exitosamente");
-
-                await client.DisconnectAsync(true);
-                logger.LogInformation("Pipeline de email completado");
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
             }
-            catch (MailKit.Security.AuthenticationException authEx)
+
+            var useImplicitSsl = bool.Parse(smtpSettings["UseImplicitSsl"] ?? "false");
+
+            if (useImplicitSsl || port == 465)
             {
-                logger.LogError(authEx, "La autenticación de Gmail falló. Verifica la contraseña de aplicación.");
-                throw new InvalidOperationException($"La autenticación de Gmail falló: {authEx.Message}. Por favor, verifica la contraseña de aplicación.", authEx);
+                await client.ConnectAsync(host, port, SecureSocketOptions.SslOnConnect);
             }
-            catch (Exception ex)
+            else
             {
-                logger.LogError(ex, "Error al enviar el email");
-                throw;
+                await client.ConnectAsync(host, port, port == 587 ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
             }
-            logger.LogInformation("Email processed");
+
+            await client.AuthenticateAsync(username, password);
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(fromName, fromEmail));
+            message.To.Add(new MailboxAddress("", to));
+            message.Subject = subject;
+            message.Body = new TextPart("html") { Text = body };
+
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+            
+            logger.LogInformation("Email enviado exitosamente a {To}", to);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error al enviar el email");
-
-            // Verificar si usar fallback
+            logger.LogError(ex, "Error crítico al procesar el envío de email");
+            
             var useFallback = bool.Parse(smtpSettings["UseFallback"] ?? "false");
-            if (useFallback)
-            {
-                logger.LogWarning("Usando respaldo de email");
-                return; // No fallar, solo logear
-            }
+            if (useFallback) return;
 
             throw new InvalidOperationException($"Error al enviar el email: {ex.Message}", ex);
         }
     }
 }
-

@@ -13,9 +13,9 @@ public class HealthController : ControllerBase
     {
         var response = new
         {
-            status = "Healthy",
+            status = "Conectado.",
             timestap = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffz"),
-            service = "Heaver-Flavor AuthService"
+            service = "Heaver-Flavor Authentication Service."
         };
         return Ok(response);
     }

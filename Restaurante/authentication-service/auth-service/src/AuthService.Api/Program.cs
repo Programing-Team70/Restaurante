@@ -14,11 +14,7 @@ System.Net.ServicePointManager.ServerCertificateValidationCallback += (sender, c
 builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services));
-
-builder.Services.AddControllers(options =>
-{
-    options.ModelBinderProviders.Insert(0, new FileDataModelBinderProvider());
-})
+builder.Services.AddControllers()
 .AddJsonOptions(o =>
 {
     o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
@@ -29,15 +25,12 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddRateLimitingPolicies();
 builder.Services.AddSecurityPolicies(builder.Configuration);
 builder.Services.AddSecurityOptions();
-
 var app = builder.Build();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseSerilogRequestLogging();
 app.UseSecurityHeaders(policies => policies
     .AddDefaultSecurityHeaders()
@@ -79,9 +72,7 @@ app.MapGet("/health", () =>
     return Results.Ok(response);
 });
 app.MapHealthChecks("/api/v1/health");
-
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
-
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     try
@@ -89,7 +80,6 @@ app.Lifetime.ApplicationStarted.Register(() =>
         var server = app.Services.GetRequiredService<IServer>();
         var addressesFeature = server.Features.Get<IServerAddressesFeature>();
         var addresses = (IEnumerable<string>?)addressesFeature?.Addresses ?? app.Urls;
-
         if (addresses != null && addresses.Any())
         {
             foreach (var addr in addresses)
@@ -106,18 +96,16 @@ app.Lifetime.ApplicationStarted.Register(() =>
         startupLogger.LogWarning(ex, "Fallo al determinar las direcciones de escucha para el log de inicio");
     }
 });
-
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-
     try
     {
         logger.LogInformation("Verificando conexión a la base de datos...");
         await context.Database.EnsureCreatedAsync();
         logger.LogInformation("Base de datos lista. Ejecutando datos semilla...");
-        await DataSeeder.SeendAsync(context);
+        
         logger.LogInformation("Inicialización de base de datos completada exitosamente");
     } catch (Exception ex)
     {

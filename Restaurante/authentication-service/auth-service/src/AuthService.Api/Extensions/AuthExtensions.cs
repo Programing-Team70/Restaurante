@@ -1,6 +1,6 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 namespace AuthService.Api.Extensions;
 
@@ -10,7 +10,6 @@ public static class AuthExtensions
     {
         var jwtSettings = configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("Error: No se ha configurado el JWT SecretKey.");
-
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -33,4 +32,3 @@ public static class AuthExtensions
         return services;
     }
 }
-

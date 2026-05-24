@@ -9,7 +9,7 @@ export const DashboardContainer = ({ children }) => {
         <div className={`app-container ${isSidebarOpen ? 'sidebar-open' : ''}`}>
             <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
             <main className='main-content min-h-screen flex flex-col'> 
-                <div className="flex-grow w-full">
+                <div className="flex-grow w-full m-0 p-0">
                     {children}
                 </div>
             <Footer />

@@ -1,5 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { RestaurantPage } from '../../features/restaurant/pages/RestaurantPage';
+import { RestaurantsPage } from '../../features/restaurant/pages/RestaurantPage.jsx';
+import { TablePage } from '../../features/table/pages/TablePage.jsx';
+import { MenuPage } from '../../features/menu/pages/MenuPage.jsx'
+import { ReservationPage } from '../../features/reservation/pages/ReservationPage.jsx';
+import { OrderPage } from '../../features/order/pages/OrderPage.jsx';
+import { EventPage } from '../../features/event/pages/EventPge.jsx';
 import { DashboardPage } from '../layout/DashboardPage.jsx';
 import { MainPage } from '../../shared/pages/MainPage.jsx';
 
@@ -10,7 +15,12 @@ export const AppRouter = () => {
 
         <Route path='/dashboard' element={<DashboardPage />}>
             <Route path="main" element={<MainPage />} />
-            <Route path="restaurant" element={<RestaurantPage />} />
+            <Route path="restaurant" element={<RestaurantsPage />} />
+            <Route path="table" element={<TablePage />} />
+            <Route path="menu" element={<MenuPage />} />
+            <Route path="reservation" element={<ReservationPage />} />
+            <Route path="order" element={<OrderPage />} />
+            <Route path="event" element={<EventPage />} />
             
             <Route index element={<Navigate to="main" />} />
         </Route>

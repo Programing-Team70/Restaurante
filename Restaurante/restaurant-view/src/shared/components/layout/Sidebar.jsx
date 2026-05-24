@@ -9,6 +9,9 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
         { label: 'Restaurantes', to: '/dashboard/restaurant' },
         { label: 'Mesas', to: '/dashboard/table' },
         { label: 'Menu', to: '/dashboard/menu' },
+        { label: 'Reservaciones', to: '/dashboard/reservation' },
+        { label: 'Ordenes', to: '/dashboard/order' },
+        { label: 'Eventos', to: '/dashboard/event' },
     ];
 
     return (

@@ -25,7 +25,7 @@ const router = Router();
 
 /**
  * @swagger
- * /res/reservations/:
+ * /reser/reservation/:
  *   post:
  *     summary: Crear una nueva reservación
  *     tags: [Reservations]
@@ -49,7 +49,7 @@ router.post(
 
 /**
  * @swagger
- * /res/reservations/{id}:
+ * /reser/reservation/{id}:
  *   put:
  *     summary: Actualizar una reservación
  *     tags: [Reservations]
@@ -80,7 +80,7 @@ router.put(
 
 /**
  * @swagger
- * /res/reservations/{id}/cancel:
+ * /reser/reservation/{id}/cancel:
  *   patch:
  *     summary: Cancelar una reservación
  *     tags: [Reservations]
@@ -105,7 +105,7 @@ router.patch(
 
 /**
  * @swagger
- * /res/reservations/{id}:
+ * /reser/reservation/{id}:
  *   delete:
  *     summary: Desactivar una reservación
  *     tags: [Reservations]
@@ -130,7 +130,7 @@ router.delete(
 
 /**
  * @swagger
- * /res/reservations/:
+ * /reser/reservation/:
  *   get:
  *     summary: Obtener reservaciones.
  *     tags: [Reservations]
@@ -147,7 +147,7 @@ router.get(
 
 /**
  * @swagger
- * /res/reservations/{restaurantId}:
+ * /reser/reservation/{restaurantId}:
  *   get:
  *     summary: Obtener reservaciones por restaurante
  *     tags: [Reservations]
@@ -165,7 +165,7 @@ router.get(
  *         description: Error al obtener las reservaciones
  */
 router.get(
-  "/:restaurantId",
+  "/restaurant/:restaurantId",
   validateGetReservationsByRestaurant,
   getReservationsByRestaurant
 );

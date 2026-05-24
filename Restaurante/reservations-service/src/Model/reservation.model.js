@@ -1,5 +1,6 @@
 'use strict';
 
+import mongoose from 'mongoose';
 import { Schema, model } from "mongoose";
 
 const reservationSchema = new Schema(
@@ -25,7 +26,7 @@ const reservationSchema = new Schema(
     trim: true,
     match: [/^\d{8}$/, "El teléfono debe contener exactamente 8 dígitos."],
   },
-    type: {
+  type: {
     type: String,
     required: [true, "El tipo de reservacion es requerido."],
     lowercase: true,
@@ -74,16 +75,14 @@ const reservationSchema = new Schema(
   }
 }, { timestamps: true, versionKey: false });
 
-reservationSchema.pre(/^find/, function (next) {
+reservationSchema.pre(/^find/, function () {
   this.where({ isActive: true });
-  next();
 });
 
-reservationSchema.pre("validate", function (next) {
+reservationSchema.pre("validate", function () {
   if (this.type === "mesa" && !this.tableId) {
     this.invalidate("tableId", "Una reserva de tipo 'mesa' requiere asignar una mesa (tableId).");
   }
-  next();
 });
 
 reservationSchema.index({ isActive: 1 });

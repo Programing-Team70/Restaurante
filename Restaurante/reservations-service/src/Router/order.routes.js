@@ -24,7 +24,7 @@ const router = Router();
 
 /**
  * @swagger
- * /res/orders/:
+ * /reser/order/:
  *   post:
  *     summary: Crear un nuevo pedido
  *     tags: [Orders]
@@ -48,7 +48,7 @@ router.post(
 
 /**
  * @swagger
- * /res/orders/{id}:
+ * /reser/order/{id}:
  *   patch:
  *     summary: Actualizar el estado de un pedido
  *     tags: [Orders]
@@ -79,7 +79,7 @@ router.patch(
 
 /**
  * @swagger
- * /res/orders/{id}:
+ * /reser/order/{id}:
  *   delete:
  *     summary: Eliminar un pedido
  *     tags: [Orders]
@@ -104,7 +104,7 @@ router.delete(
 
 /**
  * @swagger
- * /res/orders/:
+ * /reser/order/:
  *   get:
  *     summary: Obtener ordenes.
  *     tags: [Orders]
@@ -121,7 +121,7 @@ router.get(
 
 /**
  * @swagger
- * /res/orders/{restaurantId}:
+ * /reser/order/restaurant/{restaurantId}:
  *   get:
  *     summary: Obtener pedidos por restaurante
  *     tags: [Orders]
@@ -139,7 +139,7 @@ router.get(
  *         description: Error al obtener los pedidos del restaurante
  */
 router.get(
-  "/:restaurantId",
+  "/restaurant/:restaurantId",
   validateGetOrdersByRestaurant, 
   getOrdersByRestaurant
 );

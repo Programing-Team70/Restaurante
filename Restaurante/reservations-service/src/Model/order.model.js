@@ -1,5 +1,6 @@
 'use strict';
 
+import mongoose from 'mongoose';
 import { Schema, model } from "mongoose";
 
 const orderSchema = new Schema(
@@ -81,12 +82,11 @@ const orderSchema = new Schema(
 },
 { timestamps: true, versionKey: false, });
 
-orderSchema.pre(/^find/, function (next) {
+orderSchema.pre(/^find/, function () {
   this.where({ isActive: true });
-  next();
 });
 
-orderSchema.pre("save", function (next) {
+orderSchema.pre("save", function () {
   if (this.items && this.items.length > 0) {
     this.total = this.items.reduce((acc, item) => {
       item.subtotal = item.quantity * item.price;
@@ -95,7 +95,6 @@ orderSchema.pre("save", function (next) {
   } else {
     this.total = 0;
   }
-  next();
 });
 
 orderSchema.index({ isActive: 1 });

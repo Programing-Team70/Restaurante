@@ -17,7 +17,6 @@ public static class SecurityExtensions
             {
                 var allowedOrigins = configuration.GetSection("Security:AllowedOrigins").Get<string[]>() 
                 ?? DefaultAllowedOrigins;
-
                 builder.WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .WithMethods(AllowedHttpMethods)
@@ -29,7 +28,6 @@ public static class SecurityExtensions
             {
                 var adminOrigins = configuration.GetSection("Security:AdminAllowedOrigins").Get<string[]>()
                 ?? DefaultAdminOrigins;
-
                 builder.WithOrigins(adminOrigins)
                     .WithHeaders(AdminAllowedHeaders)
                     .WithMethods(AdminHttpMethods)
@@ -42,12 +40,10 @@ public static class SecurityExtensions
         {
             keysDirectory.Create();
         }
-
         var dataProtectionBuilder = services.AddDataProtection()
             .PersistKeysToFileSystem(keysDirectory)
             .SetApplicationName("AuthDotnetApi")
             .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
-
         var environment = services.BuildServiceProvider().GetRequiredService<IWebHostEnvironment>();
         if (environment.IsProduction())
         {

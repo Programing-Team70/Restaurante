@@ -6,22 +6,19 @@ using AuthService.Domain.Interfaces;
 
 namespace AuthService.Application.Services;
 
-public class UserManagementService(IUserRepository users, IRoleRepository roles, ICloudinaryService cloudinary) : IUserManagementService
+public class UserManagementService(IUserRepository users, IRoleRepository roles) : IUserManagementService
 {
     public async Task<UserResponseDto> UpdateUserRoleAsync(string userId, string roleName)
     {
-        // Normalize
         roleName = roleName?.Trim().ToUpperInvariant() ?? string.Empty;
 
-        // Validate inputs
         if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException("Invalid userId", nameof(userId));
         if (!RoleConstants.AllowedRoles.Contains(roleName))
-            throw new InvalidOperationException($"Role not allowed. Use {RoleConstants.ADMIN_ROLE} or {RoleConstants.USER_ROLE}");
+            throw new InvalidOperationException($"Rol no permitido. Usar {RoleConstants.ADMIN_ROLE} o {RoleConstants.USER_ROLE}");
 
-        // Load user with roles
-        var user = await users.GetByIdAsync(userId);
+        var user = await users.GetByIdAsync(userId) 
+            ?? throw new KeyNotFoundException("Usuario no encontrado.");
 
-        // If demoting an admin, prevent removing last admin
         var isUserAdmin = user.UserRoles.Any(r => r.Role.Name == RoleConstants.ADMIN_ROLE);
         if (isUserAdmin && roleName != RoleConstants.ADMIN_ROLE)
         {
@@ -29,21 +26,17 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles,
 
             if (adminCount <= 1)
             {
-                throw new InvalidOperationException("Cannot remove the last administrator");
+                throw new InvalidOperationException("No se puede eliminar el último administrador.");
             }
         }
 
-        // Find role entity
         var role = await roles.GetByNameAsync(roleName)
-            ?? throw new InvalidOperationException($"Role {roleName} not found");
+            ?? throw new InvalidOperationException($"Rol {roleName} no encontrado.");
 
-        // Update role using repository method
         await users.UpdateUserRoleAsync(userId, role.Id);
 
-        // Reload user with updated roles
         user = await users.GetByIdAsync(userId);
 
-        // Map to response
         return new UserResponseDto
         {
             Id = user.Id,
@@ -51,8 +44,6 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles,
             Surname = user.SurName,
             Username = user.UserName,
             Email = user.Email,
-            ProfilePicture = cloudinary.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
-            Phone = user.UserProfile?.Phone ?? string.Empty,
             Role = role.Name,
             Status = user.Status,
             IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
@@ -71,6 +62,7 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles,
     {
         roleName = roleName?.Trim().ToUpperInvariant() ?? string.Empty;
         var usersInRole = await roles.GetUsersByRoleAsync(roleName);
+        
         return usersInRole.Select(u => new UserResponseDto
         {
             Id = u.Id,
@@ -78,8 +70,6 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles,
             Surname = u.SurName,
             Username = u.UserName,
             Email = u.Email,
-            ProfilePicture = cloudinary.GetFullImageUrl(u.UserProfile?.ProfilePicture ?? string.Empty),
-            Phone = u.UserProfile?.Phone ?? string.Empty,
             Role = roleName,
             Status = u.Status,
             IsEmailVerified = u.UserEmail?.EmailVerified ?? false,

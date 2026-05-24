@@ -2,7 +2,6 @@ using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
 using AuthService.Application.Exceptions;
 using AuthService.Application.Extensions;
-using AuthService.Application.Validators;
 using AuthService.Domain.Constants;
 using AuthService.Domain.Entities;
 using AuthService.Domain.Interfaces;
@@ -18,60 +17,32 @@ public class AuthService(
     IRoleRepository roleRepository,
     IPasswordHashService passwordHashService,
     IJwtTokenService jwtTokenService,
-    ICloudinaryService cloudinaryService,
     IEmailService emailService,
     IConfiguration configuration,
     ILogger<AuthService> logger) : IAuthService
 {
-    private readonly ICloudinaryService _cloudinaryService = cloudinaryService;
     public async Task<RegisterResponseDto> RegisterAsync(RegisterDto registerDto)
     {
         if (await userRepository.ExistsByEmailAsync(registerDto.Email))
         {
             logger.LogRegistrationWithExistingEmail();
-            throw new BusinessException(ErrorCodes.EMAIL_ALREADY_EXISTS, "Correo Electronico Existente");
+            throw new BusinessException(ErrorCodes.EMAIL_ALREADY_EXISTS, "Correo Electronico Existente.");
         }
         if (await userRepository.ExistsByUsernameAsync(registerDto.Username))
         {
             logger.LogRegistrationWithExistingUsername();
-            throw new BusinessException(ErrorCodes.USERNAME_ALREADY_EXISTS, "Nombre de Usuario Existente");
-        }
-
-        string profilePicturePath;
-
-        if (registerDto.ProfilePicture != null && registerDto.ProfilePicture.Size > 0)
-        {
-            var (isValid, errorMessage) = FileValidator.ValidateImage(registerDto.ProfilePicture);
-            if (!isValid)
-            {
-                logger.LogWarning($"File validation failed: {errorMessage}");
-                throw new BusinessException(ErrorCodes.INVALID_FILE_FORMAT, errorMessage!);
-            }
-
-            try
-            {
-                var fileName = FileValidator.GenerateSecureFileName(registerDto.ProfilePicture.FileName);
-                profilePicturePath = await _cloudinaryService.UploadImageAsync(registerDto.ProfilePicture, fileName);
-            } catch (Exception)
-            {
-                logger.LogImageUploadError();
-                throw new BusinessException(ErrorCodes.IMAGE_UPLOAD_FAILED, "Failed to upload profile image");
-            }
-        } else
-        {
-            profilePicturePath = _cloudinaryService.GetDefaultAvatarUrl();
+            throw new BusinessException(ErrorCodes.USERNAME_ALREADY_EXISTS, "Nombre de Usuario Existente.");
         }
 
         var emailVerificationToken = TokenGenerator.GenerateEmailVerificationToken();
         var userId = UuidGenerator.GenerateUserId();
-        var userProfileId = UuidGenerator.GenerateUserId();
         var userEmailId = UuidGenerator.GenerateUserId();
         var userRoleId = UuidGenerator.GenerateUserId();
         var defaultRole = await roleRepository.GetByNameAsync(RoleConstants.USER_ROLE);
         
         if (defaultRole == null)
         {
-            throw new InvalidOperationException($"Default role '{RoleConstants.USER_ROLE}' not found. Ensure seeding runs before registration.");
+            throw new InvalidOperationException($"Rol predeterminado '{RoleConstants.USER_ROLE}' no encontrado. Asegúrese de que la inicialización se ejecute antes del registro.");
         }
 
         var user = new User
@@ -83,13 +54,6 @@ public class AuthService(
             Email = registerDto.Email.ToLowerInvariant(),
             Password = passwordHashService.HashPassword(registerDto.Password),
             Status = false,
-            UserProfile = new UserProfile
-            {
-                Id = userProfileId,
-                UserId = userId,
-                ProfilePicture = profilePicturePath,
-                Phone = registerDto.Phone
-            },
             UserEmail = new UserEmail
             {
                 Id = userEmailId,
@@ -98,7 +62,7 @@ public class AuthService(
                 EmailVerificationToken = emailVerificationToken,
                 EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
             },
-            UserRoles =
+            UserRoles = 
             [
                 new Domain.Entities.UserRole
                 {
@@ -186,8 +150,6 @@ public class AuthService(
             Surname = user.SurName,
             Username = user.UserName,
             Email = user.Email,
-            ProfilePicture = _cloudinaryService.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
-            Phone = user.UserProfile?.Phone ?? string.Empty,
             Role = userRole,
             Status = user.Status,
             IsEmailVerified = user.UserEmail?.EmailVerified ?? false,
@@ -202,7 +164,6 @@ public class AuthService(
         {
             Id = user.Id,
             Username = user.UserName,
-            ProfilePicture = _cloudinaryService.GetFullImageUrl(user.UserProfile?.ProfilePicture ?? string.Empty),
             Role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE
         };
     }
@@ -243,6 +204,7 @@ public class AuthService(
             {
                 email = user.Email,
                 verified = true
+                // Asegúrate de que NO haya una línea aquí que diga: profilePicture = user.UserProfile
             }
         };
     }
@@ -382,4 +344,3 @@ public class AuthService(
         return MapToUserResponseDto(user);
     }
 }
-

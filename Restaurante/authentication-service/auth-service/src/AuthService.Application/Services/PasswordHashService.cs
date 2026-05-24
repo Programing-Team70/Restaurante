@@ -2,16 +2,16 @@ using AuthService.Application.Interfaces;
 using Konscious.Security.Cryptography;
 using System.Security.Cryptography;
 using System.Text;
+
 namespace AuthService.Application.Services;
 
 public class PasswordHashService : IPasswordHashService
 {
-    // Configuración idéntica a Node.js para compatibilidad
     private const int SaltSize = 16;
     private const int HashSize = 32;
-    private const int Iterations = 2; // t=2 (igual que Node.js)
-    private const int Memory = 102400; // m=102400 KB = 100 MB (igual que Node.js)
-    private const int Parallelism = 8; // p=8 (igual que Node.js)
+    private const int Iterations = 2;
+    private const int Memory = 65536;       
+    private const int Parallelism = 1;      
 
     public string HashPassword(string password)
     {
@@ -31,9 +31,8 @@ public class PasswordHashService : IPasswordHashService
 
         var hash = argon2.GetBytes(HashSize);
 
-        // Formatear en el formato estándar Argon2 (compatible con Node.js)
-        var saltBase64 = Convert.ToBase64String(salt);
-        var hashBase64 = Convert.ToBase64String(hash);
+        var saltBase64 = Convert.ToBase64String(salt).TrimEnd('=');
+        var hashBase64 = Convert.ToBase64String(hash).TrimEnd('=');
 
         return $"$argon2id$v=19$m={Memory},t={Iterations},p={Parallelism}${saltBase64}${hashBase64}";
     }
@@ -42,113 +41,80 @@ public class PasswordHashService : IPasswordHashService
     {
         try
         {
-            Console.WriteLine($"[DEBUG] Verifying password for hash: {hashedPassword.Substring(0, Math.Min(50, hashedPassword.Length))}...");
+            if (string.IsNullOrEmpty(hashedPassword)) return false;
 
-            // Verificar si es el formato estándar Argon2
             if (hashedPassword.StartsWith("$argon2id$"))
             {
-                Console.WriteLine("[DEBUG] Using Argon2 standard format verification");
-                var result = VerifyArgon2StandardFormat(password, hashedPassword);
-                Console.WriteLine($"[DEBUG] Verification result: {result}");
-                return result;
+                return VerifyArgon2StandardFormat(password, hashedPassword);
             }
-            else
-            {
-                Console.WriteLine("[DEBUG] Using legacy format verification");
-                // Formato legacy (Base64 simple)
-                return VerifyLegacyFormat(password, hashedPassword);
-            }
+
+            return VerifyLegacyFormat(password, hashedPassword);
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"[DEBUG] Exception in VerifyPassword: {ex.Message}");
             return false;
         }
     }
 
     private bool VerifyArgon2StandardFormat(string password, string hashedPassword)
     {
-        try
+        var parts = hashedPassword.Split('$');
+        if (parts.Length != 6) return false;
+
+        var parameters = parts[3].Split(',');
+        int m = Memory, t = Iterations, p = Parallelism;
+
+        foreach (var param in parameters)
         {
-            // Usar la verificación nativa de Argon2 que maneja el formato estándar automáticamente
-            var argon2Verifier = new Argon2id(Encoding.UTF8.GetBytes(password));
-
-            // Parsear el hash manualmente para extraer los componentes
-            var parts = hashedPassword.Split('$');
-            if (parts.Length != 6) return false;
-
-            // Extraer parámetros: $argon2id$v=19$m=102400,t=2,p=8$salt$hash
-            var paramsPart = parts[3]; // "m=102400,t=2,p=8"
-            var saltBase64 = parts[4];
-            var hashBase64 = parts[5];
-
-            // Parsear parámetros
-            var parameters = paramsPart.Split(',');
-            var memory = int.Parse(parameters[0].Split('=')[1]);
-            var iterations = int.Parse(parameters[1].Split('=')[1]);
-            var parallelism = int.Parse(parameters[2].Split('=')[1]);
-
-            // Convertir de Base64 URL-safe a Base64 estándar
-            var salt = Convert.FromBase64String(FromBase64UrlSafe(saltBase64));
-            var expectedHash = Convert.FromBase64String(FromBase64UrlSafe(hashBase64));
-
-            // Configurar Argon2 con los parámetros extraídos
-            argon2Verifier.Salt = salt;
-            argon2Verifier.DegreeOfParallelism = parallelism;
-            argon2Verifier.Iterations = iterations;
-            argon2Verifier.MemorySize = memory;
-
-            // Generar hash con los mismos parámetros
-            var computedHash = argon2Verifier.GetBytes(expectedHash.Length);
-
-            // Comparar hashes
-            return expectedHash.SequenceEqual(computedHash);
+            if (param.StartsWith("m=")) m = int.Parse(param[2..]);
+            if (param.StartsWith("t=")) t = int.Parse(param[2..]);
+            if (param.StartsWith("p=")) p = int.Parse(param[2..]);
         }
-        catch (Exception ex)
+
+        byte[] salt = DecodeBase64WithoutPadding(parts[4]);
+        byte[] expectedHash = DecodeBase64WithoutPadding(parts[5]);
+
+        using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
         {
-            // Log del error para depuración
-            Console.WriteLine($"Error verifying Argon2 standard format: {ex.Message}");
-            return false;
-        }
+            Salt = salt,
+            DegreeOfParallelism = p,
+            Iterations = t,
+            MemorySize = m
+        };
+
+        var computedHash = argon2.GetBytes(expectedHash.Length);
+        return CryptographicOperations.FixedTimeEquals(expectedHash, computedHash);
     }
 
     private bool VerifyLegacyFormat(string password, string hashedPassword)
     {
-        var hashBytes = Convert.FromBase64String(hashedPassword);
-
-        var salt = new byte[SaltSize];
-        var hash = new byte[HashSize];
-        Array.Copy(hashBytes, 0, salt, 0, SaltSize);
-        Array.Copy(hashBytes, SaltSize, hash, 0, HashSize);
-
-        var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
+        try 
         {
-            Salt = salt,
-            DegreeOfParallelism = Parallelism,
-            Iterations = Iterations,
-            MemorySize = Memory
-        };
+            var hashBytes = Convert.FromBase64String(hashedPassword);
+            if (hashBytes.Length < SaltSize + HashSize) return false;
 
-        var computedHash = argon2.GetBytes(HashSize);
-        return hash.SequenceEqual(computedHash);
+            var salt = new byte[SaltSize];
+            var hash = new byte[HashSize];
+            Array.Copy(hashBytes, 0, salt, 0, SaltSize);
+            Array.Copy(hashBytes, SaltSize, hash, 0, HashSize);
+
+            using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
+            {
+                Salt = salt,
+                DegreeOfParallelism = Parallelism,
+                Iterations = Iterations,
+                MemorySize = Memory
+            };
+
+            var computedHash = argon2.GetBytes(HashSize);
+            return CryptographicOperations.FixedTimeEquals(hash, computedHash);
+        }
+        catch { return false; }
     }
 
-    private static string FromBase64UrlSafe(string base64UrlSafe)
+    private static byte[] DecodeBase64WithoutPadding(string base64)
     {
-        // Reemplazar caracteres URL-safe con caracteres Base64 estándar
-        string base64 = base64UrlSafe.Replace('-', '+').Replace('_', '/');
-
-        // Agregar padding si es necesario
-        switch (base64.Length % 4)
-        {
-            case 2:
-                base64 += "==";
-                break;
-            case 3:
-                base64 += "=";
-                break;
-        }
-
-        return base64;
+        string padded = base64.Length % 4 == 0 ? base64 : base64.PadRight(base64.Length + (4 - base64.Length % 4), '=');
+        return Convert.FromBase64String(padded);
     }
 }

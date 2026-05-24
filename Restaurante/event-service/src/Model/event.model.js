@@ -90,12 +90,11 @@ const eventSchema = new Schema(
     }
 }, { timestamps: true, versionKey: false });
 
-eventSchema.pre(/^find/, function (next) {
+eventSchema.pre(/^find/, function () {
     this.where({ isActive: true });
-    next();
 });
 
-eventSchema.pre("validate", async function (next) {
+eventSchema.pre("validate", async function () {
     if (!this.isModified('eventDate') && !this.isModified('restaurantId')) return next();
     const existingEvent = await this.constructor.findOne({
         restaurantId: this.restaurantId,
@@ -106,7 +105,6 @@ eventSchema.pre("validate", async function (next) {
     if (existingEvent) {
         return next(new Error("Ya existe un evento programado para esta fecha en este restaurante."));
     }
-    next();
 });
 
 eventSchema.index({ isActive: 1 });

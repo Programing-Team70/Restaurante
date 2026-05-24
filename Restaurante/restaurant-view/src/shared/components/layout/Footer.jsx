@@ -3,10 +3,9 @@ import { ShieldCheck, HelpCircle, Globe } from 'lucide-react';
 
 export const Footer = () => {
     return (
-        <footer className="w-full border-t border-gray-100 bg-white/50 backdrop-blur-sm">            
-            <div className="max-w-8xl mx-auto py-12 px-10">
-                <br />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+        <footer className="w-full border-t border-gray-100 bg-white/50 backdrop-blur-sm mt-auto box-border">            
+            <div className="w-full py-5 px-5 md:px-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-5">
                     <div className="space-y-4">
                         <h4 className="text-[#0a192f] font-bold text-sm uppercase tracking-widest">Soporte Técnico</h4>
                         <p className="text-gray-500 text-sm leading-relaxed">
@@ -29,11 +28,10 @@ export const Footer = () => {
                             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                             <span className="text-green-700 text-[10px] font-bold uppercase">Servidor: Online</span>
                         </div>
-                        <p className="text-gray-400 text-[10px] block mt-2">Versión 2.1.0</p>
+                        <p className="text-gray-400 text-[10px] block mt-2">Versión 2.3.8</p>
                     </div>
                 </div>
-                <br />
-                <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-100 text-gray-400 text-[10px] tracking-[0.2em] uppercase">
+                <div className="flex flex-col md:flex-row justify-between items-center border-t border-gray-100 text-gray-400 text-[10px] tracking-[0.2em] uppercase">
                     <p>© 2026 Heaven Flavor — Todos los derechos reservados.</p>
                     <div className="flex gap-6 mt-4 md:mt-0 italic font-medium">
                         <span className="hover:text-[#0a192f] cursor-pointer transition-colors">Términos de Uso</span>

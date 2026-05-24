@@ -46,7 +46,7 @@ const menuSchema = new Schema(
         message: "{VALUE} no es un tipo de plato válido."
       },
     },
-    available: {
+    isAvailable: {
       type: Boolean,
       default: true,
     },
@@ -58,9 +58,8 @@ const menuSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-menuSchema.pre(/^find/, function (next) {
+menuSchema.pre(/^find/, function () {
   this.where({ isActive: true });
-  next();
 });
 
 menuSchema.index({ isActive: 1 });

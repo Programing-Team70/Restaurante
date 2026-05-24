@@ -27,7 +27,7 @@ const router = Router();
 
 /**
  * @swagger
- * /res/menu/:
+ * /rest/menu/:
  *   post:
  *     summary: Crear un nuevo platillo
  *     tags: [Menu]
@@ -51,7 +51,7 @@ router.post(
 
 /**
  * @swagger
- * /res/menu/{id}:
+ * /rest/menu/{id}:
  *   put:
  *     summary: Actualizar un platillo
  *     tags: [Menu]
@@ -86,7 +86,7 @@ router.put(
 
 /**
  * @swagger
- * /res/menu/{id}:
+ * /rest/menu/{id}:
  *   delete:
  *     summary: Desactivar un platillo
  *     tags: [Menu]
@@ -115,7 +115,7 @@ router.delete(
 
 /**
  * @swagger
- * /res/menu/{restaurantId}:
+ * /rest/menu/restaurant/{restaurantId}:
  *   get:
  *     summary: Obtener menú por restaurante
  *     tags: [Menu]
@@ -135,14 +135,14 @@ router.delete(
  *         description: Error interno del servidor
  */
 router.get(
-  "/:restaurantId",
+  "/restaurant/:restaurantId",
   validateGetMenuByRestaurant,
   getMenuByRestaurant
 );
 
 /**
  * @swagger
- * /res/menu/{id}:
+ * /rest/menu/{id}:
  *   get:
  *     summary: Obtener menu por ID
  *     tags: [Menu]

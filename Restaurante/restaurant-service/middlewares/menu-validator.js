@@ -1,5 +1,6 @@
 import { body, param } from "express-validator";
 import { checkValidators } from "./check-validators.js";
+import Restaurant from "../src/Model/restaurant.model.js";
 
 export const validateCreateMenu = [
     body('restaurant')

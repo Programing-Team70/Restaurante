@@ -25,7 +25,7 @@ const router = Router();
 
 /**
  * @swagger
- * /res/tables/:
+ * /rest/table/:
  *   post:
  *     summary: Registrar una nueva mesa
  *     tags: [Table]
@@ -49,7 +49,7 @@ router.post(
 
 /**
  * @swagger
- * /res/tables/{restaurantId}:
+ * /rest/table/restaurant/{restaurantId}:
  *   get:
  *     summary: Obtener todas las mesas de un restaurante
  *     tags: [Table]
@@ -67,14 +67,14 @@ router.post(
  *         description: Error interno del servidor al obtener las mesas
  */
 router.get(
-  "/:restaurantId", 
+  "/restaurant/:restaurantId", 
   validateRestaurantIdForTables, 
   getTablesByRestaurant
 );
 
 /**
  * @swagger
- * /res/tables/{id}:
+ * /rest/table/{id}:
  *   get:
  *     summary: Obtener una mesa específica por su ID
  *     tags: [Table]
@@ -98,7 +98,7 @@ router.get(
 
 /**
  * @swagger
- * /res/tables/{id}:
+ * /rest/table/{id}:
  *   put:
  *     summary: Actualizar una mesa específica
  *     tags: [Table]
@@ -132,7 +132,7 @@ router.put(
 
 /**
  * @swagger
- * /res/tables/{id}:
+ * /rest/table/{id}:
  *   delete:
  *     summary: Eliminar una mesa específica
  *     tags: [Table]

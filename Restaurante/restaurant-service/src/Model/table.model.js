@@ -52,9 +52,8 @@ const tableSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-tableSchema.pre(/^find/, function (next) {
+tableSchema.pre(/^find/, function () {
   this.where({ isActive: true });
-  next();
 });
 
 tableSchema.index({ isActive: 1 });

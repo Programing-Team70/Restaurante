@@ -29,7 +29,7 @@ const routes = (app) => {
   app.use(`${BASE_PATH}/restaurant`, restaurantRoutes);
   app.use(`${BASE_PATH}/table`, tableRoutes);
   app.use(`${BASE_PATH}/menu`, menuRoutes);
-  app.get(`${BASE_PATH}/health`, (reg, res) => {
+  app.get(`${BASE_PATH}/health`, (req, res) => {
     res.status(200).json({
       status: "Conectado.",
       service: "Heaven Flavor: Restaurant Service.",

@@ -24,7 +24,7 @@ const router = Router();
 
 /**
  * @swagger
- * /res/restaurants/:
+ * /rest/restaurant/:
  *   post:
  *     summary: Crear un nuevo restaurante con imágenes
  *     tags: [Restaurant]
@@ -44,13 +44,13 @@ router.post(
   "/",
   uploadImages, 
   validateCreateRestaurant,
-  cleanupUploadedFileOnFinish,
-  createRestaurant
+  createRestaurant,
+  cleanupUploadedFileOnFinish
 );
 
 /**
  * @swagger
- * /res/restaurants/{id}:
+ * /rest/restaurant/{id}:
  *   put:
  *     summary: Actualizar información de un restaurante
  *     tags: [Restaurant]
@@ -79,13 +79,13 @@ router.put(
   "/:id",
   uploadImages,
   validateUpdateRestaurant,
-  cleanupUploadedFileOnFinish,
-  updateRestaurant
+  updateRestaurant,
+  cleanupUploadedFileOnFinish
 );
 
 /**
  * @swagger
- * /res/restaurants/{id}:
+ * /rest/restaurant/{id}:
  *   delete:
  *     summary: Desactivar un restaurante
  *     tags: [Restaurant]
@@ -110,7 +110,7 @@ router.delete(
 
 /**
  * @swagger
- * /res/restaurants:
+ * /rest/restaurant:
  *   get:
  *     summary: Listar restaurantes
  *     tags: [Restaurant]
@@ -120,7 +120,9 @@ router.delete(
  */
 router.get(
   "/", 
-  getRestaurants
+  (req, res, next) => {
+    getRestaurants(req, res, next);
+  }
 );
 
 export default router;

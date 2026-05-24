@@ -74,9 +74,8 @@ const restaurantSchema = new Schema(
   { timestamps: true, versionKey: false },
 );
 
-restaurantSchema.pre(/^find/, function (next) {
+restaurantSchema.pre(/^find/, function () {
   this.where({ isActive: true });
-  next();
 });
 
 restaurantSchema.index({ isActive: 1 });

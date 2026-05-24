@@ -27,7 +27,7 @@ const router = Router();
 
 /**
  * @swagger
- * /even/events/:
+ * /even/event/:
  *   post:
  *     summary: Agregar nuevo evento
  *     tags: [Events]
@@ -49,7 +49,7 @@ router.post(
 
 /**
  * @swagger
- * /even/events/:
+ * /even/event:
  *   get:
  *     summary: Obtener todos los eventos activos (Global)
  *     tags: [Events]
@@ -76,7 +76,7 @@ router.get(
 
 /**
  * @swagger
- * /even/events{restaurantId}:
+ * /even/event/restaurant/{restaurantId}:
  *   get:
  *     summary: Ver eventos de restaurante
  *     tags: [Events]
@@ -92,14 +92,14 @@ router.get(
  *         description: Lista de eventos obtenida con éxito
  */
 router.get(
-  "/:restaurantId", 
+  "/restaurant/:restaurantId", 
   validateGetEventByRestaurant, 
   getEventsByRestaurant
 );
 
 /**
  * @swagger
- * /even/events/{id}:
+ * /even/event/{id}:
  *   put:
  *     summary: Actualizar evento
  *     tags: [Events]
@@ -127,7 +127,7 @@ router.put(
 
 /**
  * @swagger
- * /even/events/{id}/cancel:
+ * /even/event/{id}/cancel:
  *   patch:
  *     summary: Cancelar un evento (cambio de estado)
  *     tags: [Events]
@@ -149,7 +149,7 @@ router.patch(
 
 /**
  * @swagger
- * /even/events/{id}:
+ * /even/event/{id}:
  *   delete:
  *     summary: Desactivar evento
  *     tags: [Events]

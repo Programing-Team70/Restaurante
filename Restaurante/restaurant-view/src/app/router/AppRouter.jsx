@@ -5,6 +5,8 @@ import { MenuPage } from '../../features/menu/pages/MenuPage.jsx'
 import { ReservationPage } from '../../features/reservation/pages/ReservationPage.jsx';
 import { OrderPage } from '../../features/order/pages/OrderPage.jsx';
 import { EventPage } from '../../features/event/pages/EventPge.jsx';
+import { ReportsPage } from '../../features/reports/pages/ReportsPage.jsx';
+import { StatisticsPage } from '../../features/reports/pages/StatisticsPage.jsx';
 import { DashboardPage } from '../layout/DashboardPage.jsx';
 import { MainPage } from '../../shared/pages/MainPage.jsx';
 
@@ -21,6 +23,8 @@ export const AppRouter = () => {
             <Route path="reservation" element={<ReservationPage />} />
             <Route path="order" element={<OrderPage />} />
             <Route path="event" element={<EventPage />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="statistics" element={<StatisticsPage />} />
             
             <Route index element={<Navigate to="main" />} />
         </Route>

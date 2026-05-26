@@ -1,18 +1,26 @@
 'use strict';
 
-import cloudinary from "../configs/cloudinary.js";
-import streamifier from "streamifier";
+import fs from "fs";
+import path from "path";
+import { v4 as uuid } from "uuid";
 
-export const uploadBuffer = (buffer, folder, format) => {
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-            { folder, resource_type: "raw", format },
-            (error, result) => {
-                if (error) reject(error);
-                else resolve(result.secure_url);
-            }
-        );
+export const uploadBuffer = async (buffer, folder, format) => {
 
-        streamifier.createReadStream(buffer).pipe(stream);
-    });
+    const fileName = `${uuid()}.${format}`;
+
+    const uploadPath = path.join(
+        process.cwd(),
+        "uploads",
+        folder
+    );
+
+    if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    const filePath = path.join(uploadPath, fileName);
+
+    fs.writeFileSync(filePath, buffer);
+
+    return `http://localhost:${process.env.PORT}/uploads/${folder}/${fileName}`;
 };

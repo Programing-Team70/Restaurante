@@ -26,7 +26,7 @@ const statisticsSchema = new Schema(
             default: 0
         },
         averageOccupancy: {
-            type: Number, // porcentaje
+            type: Number,
             min: 0,
             max: 100,
             default: 0
@@ -36,7 +36,7 @@ const statisticsSchema = new Schema(
             default: 0
         },
         customerSatisfaction: {
-            type: Number, // escala 1-5 o %
+            type: Number,
             default: 0
         }
     },

@@ -6,8 +6,10 @@ export const createStatisticsService = async (data) => {
     return await Statistics.create(data);
 };
 
-export const getStatisticsService = async () => {
-    return await Statistics.find();
+export const getStatisticsService = async (restaurantId) => {
+    return await Statistics.find({
+        restaurantId
+    }).sort({ date: -1 });
 };
 
 export const getStatisticService = async (id) => {

@@ -29,7 +29,9 @@ export const createStatistics = async (req, res) => {
 
 export const getStatistics = async (req, res) => {
     try {
-        const statistics = await getStatisticsService();
+        const { restaurantId } = req.query;
+
+        const statistics = await getStatisticsService(restaurantId);
 
         res.json({
             success: true,

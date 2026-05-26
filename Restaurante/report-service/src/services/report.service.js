@@ -87,13 +87,34 @@ export const createReportService = async (data) => {
     });
 
     let buffer;
-    if (format === "pdf") buffer = await generatePDF(report);
-    if (format === "excel") buffer = await generateExcel(report);
+
+    if (format === "pdf") {
+        buffer = await generatePDF(report);
+    }
+
+    if (format === "excel") {
+        buffer = await generateExcel(report);
+    }
+
+    if (format === "json") {
+        buffer = Buffer.from(
+            JSON.stringify(report, null, 2)
+        );
+    }
 
     let fileUrl = null;
 
     if (buffer) {
-        fileUrl = await uploadBuffer(buffer, "reports", format);
+        const extension =
+            format === "excel"
+                ? "xlsx"
+                : format;
+
+        fileUrl = await uploadBuffer(
+            buffer,
+            "reports",
+            extension
+        );
     }
 
     report.fileUrl = fileUrl;

@@ -1,0 +1,19 @@
+{
+  "restaurantId": "6a0ea3fc9ca4418401c5741a",
+  "title": "prueba json",
+  "reportType": "demanda",
+  "startDate": "2026-05-25T00:00:00.000Z",
+  "endDate": "2026-05-25T00:00:00.000Z",
+  "data": {
+    "demand": 0,
+    "topDishes": [],
+    "peakHours": [],
+    "totalReservations": 0
+  },
+  "format": "json",
+  "status": "pendiente",
+  "isActive": true,
+  "_id": "6a1548f84d05c58013c1fb52",
+  "createdAt": "2026-05-26T07:17:12.301Z",
+  "updatedAt": "2026-05-26T07:17:12.301Z"
+}

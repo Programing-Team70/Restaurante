@@ -4,6 +4,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
+import path from "path";
 import { dbConnection } from "./db.js";
 import { options } from "./configuration.js";
 import { helmets } from "./helmets.js";
@@ -20,7 +21,12 @@ const middlewares = (app) => {
   app.use(morgan("dev"));
   app.use(helmet(helmets));
   app.use(requestLimit);
-  //app.use(`${BASE_PATH}/api-docs`, swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+  app.use(
+      "/uploads",
+      express.static(
+          path.join(process.cwd(), "uploads")
+      )
+  );
 };
 
 const routes = (app) => {
@@ -58,7 +64,6 @@ export const initServer = async () => {
     app.listen(PORT, () => {
       console.log(`Heaven Flavor: Ejecutando en el puerto: ${PORT}`);
       console.log(`Conectado http://localhost:${PORT}${BASE_PATH}/health`);
-      //console.log(`Docs:  http://localhost:${PORT}${BASE_PATH}/api-docs`);
     });
   } catch (error) {
     console.error(`Heaven Flavor: Error al iniciar el servidor: ${error.message}`);

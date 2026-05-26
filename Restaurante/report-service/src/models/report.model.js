@@ -95,7 +95,6 @@ reportSchema.pre(/^find/, function() {
     this.where({ isActive: true });
 });
 
-// Evitar duplicados
 reportSchema.pre("validate", async function() {
     const existing = await this.constructor.findOne({
         restaurantId: this.restaurantId,

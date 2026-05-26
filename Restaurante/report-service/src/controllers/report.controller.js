@@ -12,7 +12,12 @@ export const createReport = async (req, res) => {
         const report = await createReportService(req.body);
         res.status(201).json(report);
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        console.error(e);
+
+        res.status(500).json({
+            message: e.message,
+            stack: e.stack
+        });
     }
 };
 

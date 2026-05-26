@@ -12,6 +12,8 @@ export const Sidebar = ({ isOpen, toggleSidebar }) => {
         { label: 'Reservaciones', to: '/dashboard/reservation' },
         { label: 'Ordenes', to: '/dashboard/order' },
         { label: 'Eventos', to: '/dashboard/event' },
+        { label: 'Reportes', to: '/dashboard/reports'},
+        { label: 'Estadisticas', to: '/dashboard/statistics'},
     ];
 
     return (

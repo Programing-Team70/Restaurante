@@ -2,189 +2,246 @@
 > **Nota**: Este proyecto ha sido desarrollado por el equipo de desarrollo Programming Team utilizando como base técnica y educativa la arquitectura de microservicios y las mejores prácticas de desarrollo web proporcionada por el Catedrático Braulio Echeverría (PEM) del curso IN6AV, Kinal Guatemala 2026.
 
 ## Descripción:
-Este repositorio contiene el núcleo central de **Heaven Flavor**, una plataforma integral diseñada para la digitalización de la experiencia gastronómica. El sistema actúa como un ecosistema unificado que conecta a clientes, restauranteros y administradores, permitiendo desde la reserva de mesas hasta la analítica avanzada de ventas, todo bajo una arquitectura escalable, segura y de alta disponibilidad.
+Este repositorio contiene el núcleo central de Heaven Flavor, una plataforma integral diseñada para la digitalización de la experiencia gastronómica. El sistema actúa como un ecosistema unificado que conecta a clientes, restauranteros y administradores, permitiendo desde la reserva de mesas hasta la analítica avanzada de ventas, todo bajo una arquitectura escalable, segura y de alta disponibilidad.
 
 ---
 
-## Funcionalidades Principales:
+# Funcionalidades Principales
 
-### 1. Gestión de Identidad y Acceso (Auth)
-* **Registro Multiperfil:** Sistema de registro diferenciado para Clientes y Administradores de Restaurante con validación de credenciales.
-* **Autenticación Segura:** Inicio de sesión protegido mediante hashing de contraseñas y manejo de tokens de sesión (JWT).
-* **Control de Roles (RBAC):** Middleware especializado para restringir acceso a funciones administrativas, edición de menús o visualización de reportes según el tipo de usuario.
-* **Perfil de Usuario:** Gestión completa del perfil, incluyendo historial de consumo, preferencias y eliminación segura de cuenta.
+### 1. Gestión de Identidad y Acceso (Authentication)
+* **Registro Multiperfil:** Registro para Trabajadores del Restaurante con validación de credenciales.
+* **Autenticación Segura:** Inicio de sesión para Trabajadores del Restaurante protegido mediante hashing de contraseñas.
+* **Perfil de Usuario:** Gestión completa del perfil de usuario para Trabajadores del Restaurante.
 
-### 2. Administración de Restaurantes y Recursos
-* **Gestión de Establecimientos (CRUD):** Registro detallado de locales incluyendo horarios, categorías, ubicación geográfica y galerías fotográficas.
-* **Control de Inventario de Mesas:** Sistema dinámico para gestionar la capacidad, ubicación (terraza, salón, VIP) y estados de disponibilidad en tiempo real.
-* **Ingeniería de Menús:** Herramientas para la creación de menús digitales con categorización (entradas, fuertes, bebidas), gestión de ingredientes, precios y etiquetas de disponibilidad.
+### 2. Gestión de Restaurantes, Mesas y Menús (Restaurant)
+* **Gestión de Restaurantes:** Gestión detallada de restaurantes incluyendo nombre, ubicación geográfica, horarios, categorías, precios, información de contacto y galerías fotográficas.
+* **Gestión de Mesas:** Gestión detallada de mesas incluyendo la capacidad, ubicación y estados de disponibilidad en tiempo real.
+* **Ingeniería de Menús:** Gestión detallada de platillos del menú incluyendo nombre, descripción, ingredientes que lo conforman, precio y tipo de platillo.
 
-### 3. Motor de Reservas y Pedidos
-* **Reservaciones Inteligentes:** Sistema de búsqueda y reserva que evita duplicidad de horarios y optimiza la ocupación de mesas.
-* **Gestión de Pedidos Omnicanal:** Control total sobre pedidos en mesa, para llevar (Takeout) o a domicilio (Delivery).
-* **Tracking en Tiempo Real:** Seguimiento detallado del estado del pedido: *En preparación*, *Listo*, *Entregado* o *Cancelado*.
-* **Notificaciones Automáticas:** Alertas integradas para confirmación de servicios y avisos de tiempos de espera.
+### 3. Gestión de Reservaciones y Pedidos (Reservation)
+* **Gestión de Reservaciones:** Gestión detallada de reservaciones incluyendo nombre y número de teléfono del cliente, tipo de reservación, fecha, invitados, estado y notas adicionales.
+* **Gestión de Pedidos:** Gestión detallada de pedidos incluyendo nombre del cliente, platillos pedidos, el total del pedido y estados de disponibilidad en tiempo real.
 
-### 4. Eventos y Experiencias Gastronómicas
-* **Planificación de Eventos:** Módulo para la creación de cenas temáticas, festivales y promociones especiales con fechas limitadas.
-* **Asignación de Recursos:** Gestión de servicios adicionales para eventos, como decoración personalizada, música en vivo o menús de degustación exclusivos.
+### 4. Gestión de Eventos (Event)
+* **Gestión de Reservaciones:** Gestión detallada de eventos incluyendo titulo del evento, descripción general, tipo de eventos, fecha, capacidad, estado, decoración del evento y notas adicionales.
+
 ---
 
-## Tecnologías Utilizadas
-- Componente	Tecnología
+# 🛠️ Tecnologías Utilizadas
+- Componente Tecnología
 - Runtime	Node.js y .Net
-- Lenguaje	JavaScript / C#
+- Lenguaje JavaScript / C#
 - PostgreSQL/MongoDB
 - Documentación	Postman
+- React (Vite)
+- Recharts
+
+---
+
+# 🔌 Endpoints
 
 ## Endpoints API (Authentication-Services)
 
-Base URL: `http://localhost:5210/res`
+Base URL: `http://localhost:5210/heaven-flavor/auth`
 
 | Método | Ruta | Descripción | 
-|--------|------|-------------|
-| POST | /auth/login | Iniciar sesión en una cuenta |
-| PUT | /auth/register | Registrar una cuenta |
-| DEL | /auth/verify-email | Verificar una cuenta |
+|-|-|-|
+| `GET` | `/profile` | Obtener perfil |
+| `POST` | `/login` | Iniciar sesión |
+| `PUT` | `/register` | Agregar cuenta |
 
 ---
 
 ## Endpoints API (restaurant-services)
 
-Base URL: `http://localhost:3021/res`
+Base URL: `http://localhost:3021/heaven-flavor/rest`
 
-### Restaurante (`/restaurants`)
-
-| Método | Ruta | Descripción | 
-|--------|------|-------------|
-| `POST` | `/restaurants` | Agregar nuevo restaurante |
-| `PUT` | `/restaurants/{id_restaurante}` | Actualizar restaurante |
-| `DEL` | `/restaurants/{id_restaurante}` | Desactivar restaurante |
-
-### Mesa (`/tables`)
+### Restaurante (`/restaurant`)
 
 | Método | Ruta | Descripción | 
-|--------|------|-------------|
-| `POST` | `/tables` | Agregar nueva mesa |
-| `PUT` | `/tables/{id_tables}` | Actualizar mesa |
-| `DEL` | `/tables/{id_tables}` | Desactivar mesa |
+|-|-|-|
+| `GET` | `/restaurant` | Obtener Restaurantes |
+| `POST` | `/restaurant` | Agregar restaurante |
+| `PUT` | `/restaurant/{id}` | Actualizar restaurante |
+| `DEL` | `/restaurant/{id}` | Desactivar restaurante |
 
-### Menu (`/menu`)
+### Mesa (`/table`)
 
 | Método | Ruta | Descripción | 
-|--------|------|-------------|
-| `POST` | `/menu` | Agregar nuevo menu |
-| `PUT` | `/menu/{id_menu}` | Actualizar menu |
-| `DEL` | `/menu/{id_menu}` | Desactivar menu |
+|-|-|-|
+| `GET` | `/table/{id}` | Obtener Mesa |
+| `GET` | `/table/restaurant/{id_restaurant}` | Obtener Mesas por Restaurante |
+| `POST` | `/table` | Agregar mesa |
+| `PUT` | `/table/{id}` | Actualizar mesa |
+| `DEL` | `/table/{id}` | Desactivar mesa |
+
+### Menú (`/menu`)
+
+| Método | Ruta | Descripción | 
+|-|-|-|
+| `GET` | `/menu/{id}` | Obtener platillo |
+| `GET` | `/menu/restaurant/{id_restaurant}` | Obtener platillos por Restaurante |
+| `POST` | `/menu` | Agregar platillo |
+| `PUT` | `/menu/{id}` | Actualizar platillo |
+| `DEL` | `/menu/{id}` | Desactivar platillo |
 
 ---
+
 ## Endpoints API (reservation-services)
 
-Base URL: `http://localhost:3023/res`
+Base URL: `http://localhost:3023/heaven-flavor/reser`
 
 ### Reservación (`/reservations`)
 
 | Método | Ruta | Descripción | 
-|--------|------|-------------|
-| `POST` | `/reservations` | Agregar nueva reservación |
-| `PUT` | `/reservations/{id_reserva}` | Actualizar reservación |
-| `DEL` | `/reservations/{id_reserva}` | Desactivar reservación |
-| `PATCH` | `/reservations/{id_reserva}/cancel` | Cancelar reservación |
+|-|-|-|
+| `GET` | `/reservation` | Obtener reservaciones |
+| `GET` | `/reservation/restaurant/{id_restaurant}` | Obtener reservaciones por Restaurante |
+| `POST` | `/reservation` | Agregar reservación |
+| `PUT` | `/reservation/{id}` | Actualizar reservación |
+| `DEL` | `/reservation/{id}` | Desactivar reservación |
+| `PATCH` | `/reservation/{id}/cancel` | Cancelar reservación |
 
-### Orden (`/orders`)
+### Orden (`/order`)
 
 | Método | Ruta | Descripción | 
-|--------|------|-------------|
-| `GET` | `/orders/restaurant/{id_restaurant}` | Visualizar ordenes del restaurante |
-| `POST` | `/orders` | Agregar nueva orden |
-| `PUT` | `/orders/{id_orden}` | Actualizar orden |
-| `DEL` | `/orders/{id_orden}` | Desactivar orden |
+|-|-|-|
+| `GET` | `/order` | Obtener ordenes |
+| `GET` | `/order/restaurant/{id_restaurant}` | Obtener ordenes por Restaurante |
+| `POST` | `/order` | Agregar orden |
+| `PUT` | `/order/{id}` | Actualizar orden |
+| `DEL` | `/order/{id}` | Desactivar orden |
 
 ---
 
 ## Endpoints API (event-services)
 
-Base URL: `http://localhost:3022/even/events`
+Base URL: `http://localhost:3022/heaven-flavor/even`
 
-### Event (`/events`)
+### Event (`/event`)
 
 | Método | Ruta | Descripción | 
-|--------|------|-------------|
-| `GET` | `/events/restaurant/{id_restaurante}` | Ver eventos de restaurante |
-| `POST` | `/events` | Agregar nuevo evento |
-| `PUT` | `/events/{id_evento}` | Actualizar evento |
-| `DEL` | `/events/{id_evento}` | Desactivar evento |
+|-|-|-|
+| `GET` | `/event` | Obtener eventos |
+| `GET` | `/event/restaurant/{id_restaurant}` | Obtener eventos por Restaurante |
+| `POST` | `/event` | Agregar evento |
+| `PUT` | `/event/{id_evento}` | Actualizar evento |
+| `DEL` | `/event/{id_evento}` | Desactivar evento |
+| `PATCH` | `/event/{id}/cancel` | Cancelar evento |
 
 ---
 
-### Modelos de Request
+## Endpoints API (report-services)
 
-#### Registro (`/auth/register`)
+Base URL: `http://localhost:3024/heaven-flavor/even`
 
-| Key | Type | Value | 
-|--------|------|-------------|
-| Name | Text | Nombre |
-| Surname | Text | Apellido |
-| UserName | Text | Nombre de usuario |
-| Email | Text | Correo electronico |
-| Password | Text | Contraseña |
-| Phone | Text | Numero de telefono |
-| ProfilePicture | File | Foto de perfil |
+### Report (`/reports`)
 
-#### Inicio de sesión (`/auth/login`)
-```json
-{
-    "EmailOrUsername": "userexample@example.com",
-    "Password": "passwordexample"
-}
-```
+| Método | Ruta | Descripción | 
+|-|-|-|
+| `GET`  | `/reports` | Obtener reportes |
+| `GET`  | `/reports/{id}` | Obtener reporte por ID|
+| `POST` | `/reports` | Crear reporte |
+| `DEL`  | `/reports/{id}` | Eliminar reporte    |
 
-#### Inicio de sesión (`/auth/verify-email`)
-```json
-{
-    "Token":"tokedeusuario"
-}
-```
+### Statistics (`/statistics`)
 
-#### Crear Restaurante (`/restaurants`)
-```json
-{
-  "restaurantName": "Nombre",
-  "restaurantAddress": "Direccion",
-  "restaurantSchedule": "Horario",
-  "restaurantCategory": "Categoria",
-  "averagePrice": 0,
-  "contact": {
-    "phone": "0000-0000",
-    "email": "example@example.com"
-  }
-}
-```
+| Método | Ruta | Descripción | 
+|-|-|-|
+| `GET`  | `/statistics` | Obtener estadísticas |
+| `POST` | `/statistics` | Crear estadística |
+| `PUT`  | `/statistics/{id}` | Actualizar estadística |
+| `DEL`  | `/statistics/{id}` | Eliminar estadística |
 
-#### Actualizar restaurante (`/restaurants/{id_restaurante}`)
-```json
-{
-  "restaurantName": "Nombre Actualizado",
-  "restaurantAddress": "Direccion Actualizada",
-  "restaurantSchedule": "Horario Actualizado",
-  "restaurantCategory": "Categoria Actualizada",
-  "averagePrice": 0,
-  "contact": {
-    "phone": "0000-0000",
-    "email": "exampleupdate@example.com"
-  }
-}
-```
+---
 
-#### Desactivar restaurante (`/restaurants/{id_restaurante}`)
+# 📦 Modelos Request
+
+## Modulo de Autentificación (Authentication-Services)
+
+### Obtener Perfil (`/auth/profile`)
 ```json
 {}
 ```
 
-#### Crear Mesa (`/tables`)
+### Agregar Cuenta (`/auth/register`)
 ```json
 {
-  "restaurant": "ID",
+    "Name": "Nombre",
+    "Surname": "Apellido",
+    "Email": "correo@gmial.com",
+    "Password": "Contraseña"
+}
+```
+
+### Iniciar Sesión (`/auth/login`)
+```json
+{
+    "Email": "correo@gmial.com",
+    "Password": "Contraseña"
+}
+```
+
+---
+
+## Modulo de Restaurante (restaurant-service)
+
+### Obtener restaurantes (`/restaurant`)
+| Key | Type | Value | 
+|-|-|-|
+| | | |
+
+### Crear restaurante (`/restaurant`)
+
+| Key | Type | Value | 
+|-|-|-|
+| restaurantName | Text | Nombre |
+| restaurantAddress | Text | Dirección |
+| restaurantSchedule | Text | Horario |
+| restaurantCategory | Text | Categoria |
+| averagePrice | Text | 10.00 |
+| contact.phone | Text | 8765 4321 |
+| contact.email | Text | correo@hflavor.com |
+| images | File | restaurant.png |
+
+### Actualizar restaurante (`/restaurant/{id}`)
+
+| Key | Type | Value | 
+|-|-|-|
+| restaurantName | Text | Nombre |
+| restaurantAddress | Text | Dirección |
+| restaurantSchedule | Text | Horario |
+| restaurantCategory | Text | Categoria |
+| averagePrice | Text | 10.00 |
+| contact.phone | Text | 8765 4321 |
+| contact.email | Text | correo@hflavor.com |
+| isAvailable | Text | true |
+| isActive | Text | true |
+| images | File | restaurant.png |
+
+### Desactivar restaurante (`/restaurant/{id}`)
+| Key | Type | Value | 
+|-|-|-|
+| | | |
+
+---
+
+## Modulo de Mesa
+
+### Obtener mesa (`/table/{id}`)
+```json
+{}
+```
+
+### Obtener mesas por restaurante(`/table/restaurant/{id_restaurant}`)
+```json
+{}
+```
+
+### Crear mesa (`/table`)
+```json
+{
+  "restaurant": "qwertyuioplkjhgfdsazxcvb",
   "capacity": 0,
   "location": "Localizacion",
   "availableHours": [
@@ -196,10 +253,9 @@ Base URL: `http://localhost:3022/even/events`
 }
 ```
 
-#### Actualizar Mesa (`/tables/{id_tables}`)
+### Actualizar mesa (`/table/{id}`)
 ```json
 {
-  "restaurant": "ID Actualizado",
   "capacity": 0,
   "location": "Localizacion Actualizada",
   "availableHours": [
@@ -207,176 +263,299 @@ Base URL: `http://localhost:3022/even/events`
       "start": "00:00",
       "end": "00:00"
     }
-  ]
+  ],
+  "isAvailable": false,
+  "isActive": false
 }
 ```
 
-#### Desactivar Mesa (`/tables/{id_tables}`)
+### Desactivar mesa (`/table/{id}`)
 ```json
 {}
 ```
 
-#### Crear Menu (`/menu`)
+---
+
+## Modulo de Menu 
+
+### Obtener menu (`/menu/{id}`)
+```json
+{}
+```
+
+### Obtener menu por restaurante (`/menu/restaurant/{id_restaurant}`)
+```json
+{}
+```
+
+### Crear menu (`/menu`)
 ```json
 {
-  "restaurant": "ID",
+  "restaurant": "qwertyuioplkjhgfdsazxcvb",
   "name": "Nombre",
   "description": "Descripcion",
-  "ingredients": ["Ingrediente"],
-  "price": 0,
-  "type": "Tipo"
+  "ingredients": ["Ingrediente1", "Ingrediente2"],
+  "price": 10.00,
+  "type": "plato fuerte"
 }
 ```
 
-#### Actualizar Menu (`/menu/{id_menu}`)
+### Actualizar menu (`/menu/{id}`)
 ```json
 {
-  "restaurant": "ID Actualizado",
-  "name": "Nombre Actualizado",
-  "description": "Descripcion Actualizada",
-  "ingredients": ["Ingrediente Actualizado"],
-  "price": 0,
-  "type": "Tipo Actualizado"
+  "name": "Nombre",
+  "description": "Descripcion",
+  "ingredients": ["Ingrediente1", "Ingrediente2"],
+  "price": 10.00,
+  "type": "plato fuerte",
+  "isAvailable": false,
+  "isActive": false
 }
 ```
 
-#### Desactivar Menu (`/menu/{id_menu}`)
+### Desactivar menu (`/menu/{id}`)
 ```json
 {}
 ```
 
-#### Crear Reservacion (`/reservations`)
+---
+
+## Modulo de Reservaciones
+
+### Obtener reservaciones (`/reservation`)
+```json
+{}
+```
+
+### Crear reservacion (`/reservation`)
 ```json
 {
-  "restaurantId": "ID",
-  "tableId": "ID",
-  "orderId": "ID",
-  "customerName": "Nombre",
-  "customerPhone": "0000-0000",
-  "type": "Tipo",
-  "date": "0000-00-00T00:00:00.000Z",
-  "guests": 0,
-  "status": "Estado",
+  "restaurantId": "qwertyuioplkjhgfdsazxcvb",
+  "tableId": "bvcxzasdfghjklpoiuytrewq",
+  "customerName": "Nombre del cliente",
+  "customerPhone": "0000 0000",
+  "type": "mesa",
+  "date": "2026-01-01T00:00:00.000Z",
+  "guests": 1,
+  "status": "confirmada",
   "notes": "Notas"
 }
 ```
 
-#### Actualizar Reservacion (`/reservations/{id_reserva}`)
+### Actualizar reservacion (`/reservation/{id}`)
 ```json
 {
-  "restaurantId": "ID Actualizado",
-  "tableId": "ID Actualizado",
-  "orderId": "ID Actualizado",
-  "customerName": "Nombre Actualizado",
-  "customerPhone": "0000-0000",
-  "type": "Tipo Actualizado",
-  "date": "0000-00-00T00:00:00.000Z",
-  "guests": 0,
-  "status": "Estado Actualizado",
-  "notes": "Notas Actualizadas"
+  "customerName": "Nombre del cliente",
+  "customerPhone": "0000 0000",
+  "type": "mesa",
+  "date": "2026-01-01T00:00:00.000Z",
+  "guests": 1,
+  "status": "confirmada",
+  "notes": "Notas"
+  "isAvailable": false,
+  "isActive": false
 }
 ```
 
-#### Desactivar Reservacion (`/reservations/{id_reserva}`)
+### Desactivar reservacion (`/reservation/{id}`)
 ```json
 {}
 ```
 
-#### Cancelar Reservacion (`/reservations/{id_reserva}/cancel`)
+### Cancelar reservacion (`/reservation/{id}/cancel`)
 ```json
 {}
 ```
 
-#### Visualizar Ordenes (`/orders/restaurant/{id_restaurant}`)
+---
+
+## Modulo de Ordenes
+
+### Obtener ordenes (`/order`)
 ```json
 {}
 ```
 
-#### Crear Orden (`/orders`)
+### Obtener orden por restaurante (`/order/restaurant/{id_restaurant}`)
+```json
+{}
+```
+
+### Crear orden (`/order`)
 ```json
 {
-  "restaurantId": "ID",
-  "reservationId": "ID",
-  "customerName": "Nombre",
+  "restaurantId": "qwertyuioplkjhgfdsazxcvb",
+  "reservationId": "bvcxzasdfghjklpoiuytrewq",
+  "customerName": "Nombre del cliente",
   "items": [
     {
-      "menuItemId": "ID",
-      "name": "Nombre",
-      "quantity": 0,
-      "price": 00
+      "menuItemId": "qwertyuiopasdfghjklzxcvb",
+      "quantity": 1,
+      "price": 10.00
+    },
+    {
+      "menuItemId": "qwertyuiopasdfghjklzxcvb",
+      "quantity": 1,
+      "price": 10.00
     }
   ]
 }
 ```
 
-#### Actualizar Orden (`/orders/{id_orden}`)
+### Actualizar orden (`/order/{id}`)
 ```json
 {
-  "restaurantId": "ID",
-  "reservationId": "ID",
-  "customerName": "Nombre",
+  "restaurantId": "qwertyuioplkjhgfdsazxcvb",
+  "reservationId": "bvcxzasdfghjklpoiuytrewq",
+  "customerName": "Nombre del cliente",
   "items": [
     {
-      "menuItemId": "ID",
-      "name": "Nombre",
-      "quantity": 0,
-      "price": 00
+      "menuItemId": "qwertyuiopasdfghjklzxcvb",
+      "quantity": 1,
+      "price": 10.00
+    },
+    {
+      "menuItemId": "qwertyuiopasdfghjklzxcvb",
+      "quantity": 1,
+      "price": 10.00
     }
-  ]
+  ],
+  "isAvailable": false,
+  "isActive": false
 }
 ```
 
-#### Desactivar Orden (`/orders/{id_orden}`)
+### Desactivar orden (`/order/{id}`)
 ```json
 {}
 ```
 
-#### Visualizar Eventos (`/events/restaurant/{id_restaurante}`)
+---
+
+## Modulo de Eventos
+
+### Obtener eventos (`/event`)
 ```json
 {}
 ```
 
-#### Crear Evento (`/events`)
+### Obtener eventos por restaurante (`/event/restaurant/{id_restaurant}`)
+```json
+{}
+```
+
+### Crear evento (`/event`)
 ```json
 {
-  "restaurantId": "ID",
+  "restaurantId": "qwertyuioplkjhgfdsazxcvb",
   "title": "Titulo",
   "description": "Descripcion",
-  "eventType": "Tipo",
-  "eventDate": "0000-00-00T00:00:00.000Z",
+  "eventType": "cena tematica",
+  "eventDate": "2026-01-01T00:00:00.000Z",
   "resources": {
     "music": "Música",
     "decoration": "Decoración",
-    "extraStaffNeeded": 0,
+    "extraStaffNeeded": 1,
     "specialMenu": [
-      "ID",
-      "ID"
+      "bvcxzasdfghjklpoiuytrewq",
+      "qwertyuiopasdfghjklzxcvb"
     ]
   }
 }
 ```
 
-#### Actualizar Evento (`/events/{id_evento}`)
+### Actualizar evento (`/event/{id_evento}`)
 ```json
 {
-  "restaurantId": "ID Actualizado",
-  "title": "Titulo Actualizado",
-  "description": "Descripcion Actualizada",
-  "eventType": "Tipo Actualizado",
-  "eventDate": "0000-00-00T00:00:00.000Z",
+  "title": "Titulo",
+  "description": "Descripcion",
+  "eventType": "cena tematica",
+  "eventDate": "2026-01-01T00:00:00.000Z",
   "resources": {
-    "music": "Música Actualizada",
-    "decoration": "Decoración Actualizada",
-    "extraStaffNeeded": 0,
+    "music": "Música",
+    "decoration": "Decoración",
+    "extraStaffNeeded": 1,
     "specialMenu": [
-      "ID Actualizado",
-      "ID Actualizado"
+      "bvcxzasdfghjklpoiuytrewq",
+      "qwertyuiopasdfghjklzxcvb"
     ]
   }
+  "isAvailable": false,
+  "isActive": false
 }
 ```
 
-#### Desactivar Evento (`/events/{id_evento}`)
+### Desactivar evento (`/event/{id}`)
+```json
+{}
+```
+
+### Cancelar evento (`/event/{id}/cancel`)
+```json
+{}
+```
+
+---
+
+## Modulo de Reporte (report-service)
+
+### Obtener reportes (`/reports`)
+```json
+{}
+```
+
+### Obtener reporte (`/reports/{id}`)
+```json
+{}
+```
+
+### Crear reporte (`/reports`)
+```json
+{
+  "restaurantId": "qwertyuioplkjhgfdsazxcvb",
+  "title": "titulo",
+  "reportType": "demanda",
+  "startDate": "2026-01-01T00:00:00.000Z",
+  "endDate": "2026-02-01T00:00:00.000Z",
+  "format": "pdf"
+}
+```
+
+### Desactivar reporte (`/reports/{id}`)
+```json
+{}
+```
+
+---
+
+## Modulo de Estadística (report-service)
+
+### Obtener Estadísticas (`/statistics`)
+```json
+{}
+```
+
+### Crear Estadística (`/statistics`)
+```json
+{
+  "restaurantId": "bvcxzasdfghjklpoiuytrewq",
+  "metric": "Ventas",
+  "value": 0,
+  "date": "2026-01-01T00:00:00.000Z"
+}
+```
+
+### Actualizar Estadística (`/statistics/{id}`)
+```json
+{
+  "metric": "Ventas",
+  "value": 0,
+  "date": "2026-01-01T00:00:00.000Z",
+  "isActive": false
+}
+```
+
+### Desactivar Estadística (`/statistics/{id}`)
 ```json
 {}
 ```
@@ -420,68 +599,6 @@ auth-service/
 └── .gitignore
 ```
 
----
-
-```
-event-service/
-├── configs/
-│   ├── app.js                          # Configuración principal del servidor
-|   ├── configuration.js                # Configuración general
-│   ├── db.js                           # Conexión a MongoDB
-|   ├── helmets.js                      # Configuración de Helmet
-|   └── rateLimit.js                    # Limitar las peticiones
-│
-├── middlewares/
-│   ├── check-validators.js             # Validar peticiones
-│   ├── handle-errors.js                # Manejo global de errores
-│   ├── validate-event.js               # Validación de modelo
-|   └── validate-JWT                    # Validación de token
-│
-├── src/
-│   ├── event.controller.js             # Controlador
-│   ├── event.model.js                  # Modelo de datos
-│   ├── event.routes.js                 # Rutas
-│   └── event.service.js                # Lógica de negocio
-├── index.js                            # Punto de entrada
-├── package.json                        # Dependencias y scripts
-├── pnpm-lock.yaml                      # Lock file de pnpm
-└── README.md
-```
----
-
-```
-reservations-service/
-├── configs/
-│   ├── app.js                          # Configuración principal del servidor
-|   ├── configuration.js                # Configuración general
-│   ├── db.js                           # Conexión a MongoDB
-|   ├── helmets.js                      # Configuración de Helmet
-|   └── rateLimit.js                    # Limitar las peticiones
-│
-├── middlewares/
-│   ├── check-validators.js             # Validar peticiones
-│   ├── handle-errors.js                # Manejo global de errores
-│   ├── order-validator.js              # Validación de modelo
-│   ├── reservation-validator.js        # Validación de modelo
-|   └── validate-JWT                    # Validación de token
-│
-├── src/
-│   ├── order.controller.js             # Controlador
-│   ├── order.model.js                  # Modelo de datos
-│   ├── order.routes.js                 # Rutas
-│   ├── order.service.js                # Lógica de negocio
-│   ├── reservation.controller.js       # Controlador
-│   ├── reservation.model.js            # Modelo de datos
-│   ├── reservation.routes.js           # Rutas
-│   └── reservation.service.js          # Lógica de negocio
-├── index.js                            # Punto de entrada
-├── package.json                        # Dependencias y scripts
-├── pnpm-lock.yaml                      # Lock file de pnpm
-└── README.md
-```
-
----
-
 ```
 restaurant-service/
 ├── configs/
@@ -489,6 +606,7 @@ restaurant-service/
 │   ├── cloudinary.js                   # Configuración de cloudinary
 |   ├── configuration.js                # Configuración general
 │   ├── db.js                           # Conexión a MongoDB
+│   ├── documentation.js                # Docuemntación de Swagger
 |   ├── helmets.js                      # Configuración de Helmet
 |   └── rateLimit.js                    # Limitar las peticiones
 │
@@ -500,21 +618,132 @@ restaurant-service/
 │   ├── menu-validator.js               # Validación de modelo
 │   ├── restaurant-validator.js         # Validación de modelo
 │   ├── table-validator.js              # Validación de modelo
-|   └── validate-JWT                    # Validación de token
 │
 ├── src/
-│   ├── menu.controller.js              # Controlador
-│   ├── menu.model.js                   # Modelo de datos
-│   ├── menu.routes.js                  # Rutas
-│   ├── menu.service.js                 # Lógica de negocio
-│   ├── restaurant.controller.js        # Controlador
-│   ├── restaurant.model.js             # Modelo de datos
-│   ├── restaurant.routes.js            # Rutas
-│   ├── restaurant.service.js           # Lógica de negocio
-│   ├── table.controller.js             # Controlador
-│   ├── table.model.js                  # Modelo de datos
-│   ├── table.routes.js                 # Rutas
-│   └── table.service.js                # Lógica de negocio
+│   ├── Controller
+│       ├── menu.controller.js          # Controlador
+│       ├── restaurant.controller.js    # Controlador
+│       ├── table.controller.js         # Controlador
+│   ├── Model
+│       ├── menu.model.js               # Modelo de datos
+│       ├── restaurant.model.js         # Modelo de datos
+│       ├── table.model.js              # Modelo de datos
+│   ├── Routes
+│       ├── menu.routes.js              # Rutas
+│       ├── restaurant.routes.js        # Rutas
+│       ├── table.routes.js             # Rutas
+│   ├── Services
+│       ├── menu.service.js             # Lógica de negocio
+│       ├── restaurant.service.js       # Lógica de negocio
+│       └── table.service.js            # Lógica de negocio
+├── .gitignore
+├── index.js                            # Punto de entrada
+├── package.json                        # Dependencias y scripts
+├── pnpm-lock.yaml                      # Lock file de pnpm
+└── README.md
+```
+
+```
+reservations-service/
+├── configs/
+│   ├── app.js                          # Configuración principal del servidor
+|   ├── configuration.js                # Configuración general
+│   ├── db.js                           # Conexión a MongoDB
+│   ├── documentation.js                # Docuemntación de Swagger
+|   ├── helmets.js                      # Configuración de Helmet
+|   └── rateLimit.js                    # Limitar las peticiones
+│
+├── middlewares/
+│   ├── check-validators.js             # Validar peticiones
+│   ├── handle-errors.js                # Manejo global de errores
+│   ├── order-validator.js              # Validación de modelo
+│   ├── reservation-validator.js        # Validación de modelo
+│
+├── src/
+│   ├── Controller
+│       ├── order.controller.js         # Controlador
+│       ├── reservation.controller.js   # Controlador
+│   ├── Model
+│       ├── order.model.js              # Modelo de datos
+│       ├── reservation.model.js        # Modelo de datos
+│   ├── Routes
+│       ├── order.routes.js             # Rutas
+│       ├── reservation.routes.js       # Rutas
+│   ├── Services
+│       ├── order.service.js            # Lógica de negocio
+│       ├── reservation.service.js      # Lógica de negocio
+├── .gitignore
+├── index.js                            # Punto de entrada
+├── package.json                        # Dependencias y scripts
+├── pnpm-lock.yaml                      # Lock file de pnpm
+└── README.md
+```
+
+```
+event-service/
+├── configs/
+│   ├── app.js                          # Configuración principal del servidor
+|   ├── configuration.js                # Configuración general
+│   ├── db.js                           # Conexión a MongoDB
+│   ├── documentation.js                # Docuemntación de Swagger
+|   ├── helmets.js                      # Configuración de Helmet
+|   └── rateLimit.js                    # Limitar las peticiones
+│
+├── middlewares/
+│   ├── check-validators.js             # Validar peticiones
+│   ├── event-validator.js              # Validación de modelo
+│   ├── handle-errors.js                # Manejo global de errores
+│
+├── src/
+│   ├── Controller
+│       ├── event.controller.js         # Controlador
+│   ├── Model
+│       ├── event.model.js              # Modelo de datos
+│   ├── Routes
+│       ├── event.routes.js             # Rutas
+│   ├── Services
+│       ├── event.service.js            # Lógica de negocio
+├── .gitignore
+├── index.js                            # Punto de entrada
+├── package.json                        # Dependencias y scripts
+├── pnpm-lock.yaml                      # Lock file de pnpm
+└── README.md
+```
+
+```
+report-service/
+├── configs/
+│   ├── app.js                          # Configuración principal del servidor
+│   ├── cloudinary.js                   # Configuración de cloudinary
+│   ├── configuration.js                # Configuración general
+│   ├── db.js                           # Conexión a MongoDB
+│   ├── helmets.js                      # Configuración de Helmet
+│   └── rateLimit.js                    # Limitar las peticiones
+│
+├── helpers/
+│   ├── excel-generator.js              # Generar archivo excel
+│   ├── pdf-generator.js                # Generar archivo pdf
+│   ├── upload-file.js                  # Generar archivo descargable
+│
+├── middlewares/
+│   ├── check-validators.js             # Validación general
+│   ├── handle-errors.js                # Manejo global de errores
+│   ├── validate-report.js              # Validación de reportes
+│
+├── src/
+│   ├── Controller
+│       ├── report.controller.js        # Controlador
+│       ├── statistics.controller.js    # Controlador
+│   ├── Model
+│       ├── report.model.js             # Modelo de datos
+│       ├── statistics.model.js         # Modelo de datos
+│   ├── Routes
+│       ├── report.routes.js            # Rutas
+│       ├── statistics.routes.js        # Rutas
+│   ├── Services
+│       ├── report.service.js           # Lógica de negocio
+│       ├── statistics.service.js       # Lógica de negocio
+├── .gitignore
 ├── index.js                            # Punto de entrada
 ├── package.json                        # Dependencias y scripts
 ├── pnpm-lock.yaml                      # Lock file de pnpm
@@ -523,37 +752,19 @@ restaurant-service/
 
 ---
 
-### Requisitos Previos
+### 📋 Requisitos Previos
 - .NET 8.0 SDK
 - PostgreSQL 13+
-- Cuenta de Gmail con App Password (para emails)
+- Cuenta de Gmail con App Password
 - Node.js 22+
-- pnpm 10+ (Package Manager)
-- 16 GB de ram
+- pnpm 10+
+- 16 GB de RAM
 
 ---
 
-### Variables de Entorno
+### 🔑 Variables de Entorno
 
-#### event-services
-
-Crear archivo `.env` en la raíz del proyecto:
-
-```env
-PORT=3022
-
-URI_MONGODB=mongodb://localhost:27017/heaven-flavor
-
-JWT_SECRET=$ecretKeyForHFl@avor
-JWT_EXPIRES_IN=1h
-JWT_USSUER=HeavenFlavor
-JWT_AUDIENCE=HeavenFlavor
-
-NODE_TLS_REJECT_UNAUTHORIZED=0
-```
----
-
-#### restaurant-services
+### restaurant-service
 
 Crear archivo `.env` en la raíz del proyecto:
 
@@ -563,21 +774,15 @@ PORT=3021
 URI_MONGODB=mongodb://localhost:27017/heaven-flavor
 
 CLOUDINARY_CLOUD_NAME=dsbibfrfc
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+CLOUDINARY_API_KEY=421535535627829
+CLOUDINARY_API_SECRET=W_NWkBCJ9Vb1Q5TtHHIXxBY_HYU
 CLOUDINARY_BASE_FOLDER=https://res.cloudinary.com/dsbibfrfc/image/upload/Heaven_flavor
 CLOUDINARY_DEFAULT_AVATAR_NAME=restaurant_uur74f.jpg
 
-JWT_SECRET=$ecretKeyForHFl@avor
-JWT_EXPIRES_IN=1h
-JWT_USSUER=HeavenFlavor
-JWT_AUDIENCE=HeavenFlavor
-
 NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
----
 
-#### reservations-services
+### reservations-services
 
 Crear archivo `.env` en la raíz del proyecto:
 
@@ -586,10 +791,34 @@ PORT=3023
 
 URI_MONGODB=mongodb://localhost:27017/heaven-flavor
 
-JWT_SECRET=$ecretKeyForHFl@avor
-JWT_EXPIRES_IN=1h
-JWT_USSUER=HeavenFlavor
-JWT_AUDIENCE=HeavenFlavor
+NODE_TLS_REJECT_UNAUTHORIZED=0
+```
+
+### event-service
+
+Crear archivo `.env` en la raíz del proyecto:
+
+```env
+PORT=3022
+
+URI_MONGODB=mongodb://localhost:27017/heaven-flavor
+
+NODE_TLS_REJECT_UNAUTHORIZED=0
+```
+### report-services
+
+Crear archivo `.env` en la raíz del proyecto:
+
+```env
+PORT=3024
+
+URI_MONGODB=mongodb://localhost:27017/heaven-flavor
+
+CLOUDINARY_CLOUD_NAME=dsbibfrfc
+CLOUDINARY_API_KEY=421535535627829
+CLOUDINARY_API_SECRET=W_NWkBCJ9Vb1Q5TtHHIXxBY_HYU
+CLOUDINARY_BASE_FOLDER=https://res.cloudinary.com/dsbibfrfc/image/upload/Heaven_flavor
+CLOUDINARY_DEFAULT_AVATAR_NAME=restaurant_uur74f.jpg
 
 NODE_TLS_REJECT_UNAUTHORIZED=0
 ```

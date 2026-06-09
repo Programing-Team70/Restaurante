@@ -14,15 +14,15 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles)
 
         if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException("Invalid userId", nameof(userId));
         if (!RoleConstants.AllowedRoles.Contains(roleName))
-            throw new InvalidOperationException($"Rol no permitido. Usar {RoleConstants.ADMIN_ROLE} o {RoleConstants.USER_ROLE}");
+            throw new InvalidOperationException($"Rol no permitido. Usar {RoleConstants.EMPLEADO} o {RoleConstants.CLIENTE}.");
 
-        var user = await users.GetByIdAsync(userId) 
+        var user = await users.GetByIdAsync(userId)
             ?? throw new KeyNotFoundException("Usuario no encontrado.");
 
-        var isUserAdmin = user.UserRoles.Any(r => r.Role.Name == RoleConstants.ADMIN_ROLE);
-        if (isUserAdmin && roleName != RoleConstants.ADMIN_ROLE)
+        var isUserAdmin = user.UserRoles.Any(r => r.Role.Name == RoleConstants.EMPLEADO);
+        if (isUserAdmin && roleName != RoleConstants.EMPLEADO)
         {
-            var adminCount = await roles.CountUsersInRoleAsync(RoleConstants.ADMIN_ROLE);
+            var adminCount = await roles.CountUsersInRoleAsync(RoleConstants.EMPLEADO);
 
             if (adminCount <= 1)
             {
@@ -43,6 +43,7 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles)
             Name = user.Name,
             Surname = user.SurName,
             Username = user.UserName,
+            Phone = user.Phone,
             Email = user.Email,
             Role = role.Name,
             Status = user.Status,
@@ -62,13 +63,14 @@ public class UserManagementService(IUserRepository users, IRoleRepository roles)
     {
         roleName = roleName?.Trim().ToUpperInvariant() ?? string.Empty;
         var usersInRole = await roles.GetUsersByRoleAsync(roleName);
-        
+
         return usersInRole.Select(u => new UserResponseDto
         {
             Id = u.Id,
             Name = u.Name,
             Surname = u.SurName,
             Username = u.UserName,
+            Phone = u.Phone,
             Email = u.Email,
             Role = roleName,
             Status = u.Status,

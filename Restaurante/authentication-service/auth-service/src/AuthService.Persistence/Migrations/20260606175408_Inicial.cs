@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace AuthService.Persistence.Migrations
 {
-    public partial class InitialAdded : Migration
+    /// <inheritdoc />
+    public partial class Inicial : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -22,6 +24,7 @@ namespace AuthService.Persistence.Migrations
                 {
                     table.PrimaryKey("pk_roles", x => x.id);
                 });
+
             migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
@@ -30,6 +33,7 @@ namespace AuthService.Persistence.Migrations
                     name = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
                     sur_name = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
                     user_name = table.Column<string>(type: "character varying(25)", maxLength: 25, nullable: false),
+                    phone = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false),
                     email = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     password = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     status = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
@@ -40,6 +44,30 @@ namespace AuthService.Persistence.Migrations
                 {
                     table.PrimaryKey("pk_users", x => x.id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "refresh_tokens",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    token_hash = table.Column<string>(type: "text", nullable: false),
+                    user_id = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    family_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    revoked_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_refresh_tokens", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_refresh_tokens_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateTable(
                 name: "user_emails",
                 columns: table => new
@@ -60,6 +88,7 @@ namespace AuthService.Persistence.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
             migrationBuilder.CreateTable(
                 name: "user_password_resets",
                 columns: table => new
@@ -79,25 +108,7 @@ namespace AuthService.Persistence.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
-            migrationBuilder.CreateTable(
-                name: "user_profiles",
-                columns: table => new
-                {
-                    id = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
-                    user_id = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
-                    profile_picture = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false, defaultValue: ""),
-                    phone = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_user_profiles", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_user_profiles_users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+
             migrationBuilder.CreateTable(
                 name: "user_roles",
                 columns: table => new
@@ -124,52 +135,76 @@ namespace AuthService.Persistence.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_refresh_tokens_family_id",
+                table: "refresh_tokens",
+                column: "family_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_refresh_tokens_token_hash",
+                table: "refresh_tokens",
+                column: "token_hash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_refresh_tokens_user_id",
+                table: "refresh_tokens",
+                column: "user_id");
+
             migrationBuilder.CreateIndex(
                 name: "ix_user_emails_user_id",
                 table: "user_emails",
                 column: "user_id",
                 unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "ix_user_password_resets_user_id",
                 table: "user_password_resets",
                 column: "user_id",
                 unique: true);
-            migrationBuilder.CreateIndex(
-                name: "ix_user_profiles_user_id",
-                table: "user_profiles",
-                column: "user_id",
-                unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "ix_user_roles_role_id",
                 table: "user_roles",
                 column: "role_id");
+
             migrationBuilder.CreateIndex(
                 name: "ix_user_roles_user_id",
                 table: "user_roles",
                 column: "user_id");
+
             migrationBuilder.CreateIndex(
                 name: "ix_users_email",
                 table: "users",
                 column: "email",
                 unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "ix_users_user_name",
                 table: "users",
                 column: "user_name",
                 unique: true);
         }
+
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "refresh_tokens");
+
+            migrationBuilder.DropTable(
                 name: "user_emails");
+
             migrationBuilder.DropTable(
                 name: "user_password_resets");
-            migrationBuilder.DropTable(
-                name: "user_profiles");
+
             migrationBuilder.DropTable(
                 name: "user_roles");
+
             migrationBuilder.DropTable(
                 name: "roles");
+
             migrationBuilder.DropTable(
                 name: "users");
         }

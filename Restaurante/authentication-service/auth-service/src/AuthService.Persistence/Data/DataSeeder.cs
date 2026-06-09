@@ -9,77 +9,71 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(ApplicationDbContext context)
     {
-        // 1. Semilla de Roles
-        if (!await context.Roles.AnyAsync())
+        // Verificación si ya existen roles
+        if (!(context.Roles?.Any() ?? false))
         {
             var roles = new List<Role>
             {
                 new()
                 {
                     Id = UuidGenerator.GenerateRoleId(),
-                    Name = RoleConstants.ADMIN_ROLE,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    Name = RoleConstants.EMPLEADO
                 },
                 new()
                 {
                     Id = UuidGenerator.GenerateRoleId(),
-                    Name = RoleConstants.USER_ROLE,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    Name = RoleConstants.CLIENTE
                 }
             };
 
-            await context.Roles.AddRangeAsync(roles);
+            await context.Roles!.AddRangeAsync(roles);
             await context.SaveChangesAsync();
         }
 
-        // 2. Semilla de Usuario Administrador inicial
-        if (!await context.Users.AnyAsync())
+        // Registra un empleado por defecto solo si no existen usuarios en el sistema
+        if (!(await (context.Users?.AnyAsync() ?? Task.FromResult(false))))
         {
-            var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == RoleConstants.ADMIN_ROLE);
+            var employeeRole = await (context.Roles ?? throw new InvalidOperationException("Roles DbSet is null."))
+                .FirstOrDefaultAsync(r => r.Name == RoleConstants.EMPLEADO);
 
-            if (adminRole != null)
+            if (employeeRole != null)
             {
                 var passwordHasher = new PasswordHashService();
+
                 var userId = UuidGenerator.GenerateUserId();
-                
-                var profileId = UuidGenerator.GenerateUserId(); 
                 var emailId = UuidGenerator.GenerateUserId();
                 var userRoleId = UuidGenerator.GenerateUserId();
 
                 var adminUser = new User
                 {
                     Id = userId,
-                    Name = "Admin",
-                    SurName = "Kinal Sports",
-                    UserName = "admin",
-                    Email = "admin@kinalsports.edu.gt",
-                    Password = passwordHasher.HashPassword("Kinal2026!"),
+                    Name = "Administradora",
+                    SurName = "General",
+                    UserName = "ADO",
+                    Phone = "00000000",
+                    Email = "ado@gmail.com",
+                    Password = passwordHasher.HashPassword("ADO"),
                     Status = true,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
                     UserEmail = new UserEmail
                     {
                         Id = emailId,
                         UserId = userId,
                         EmailVerified = true,
-                        EmailVerificationToken = null
+                        EmailVerificationToken = null,
+                        EmailVerificationTokenExpiry = null
                     },
-                    UserRoles = new List<UserRole>
+                    UserRoles =
                     {
-                        new()
+                        new UserRole
                         {
                             Id = userRoleId,
                             UserId = userId,
-                            RoleId = adminRole.Id,
-                            CreatedAt = DateTime.UtcNow,
-                            UpdatedAt = DateTime.UtcNow
+                            RoleId = employeeRole.Id
                         }
                     }
                 };
 
-                await context.Users.AddAsync(adminUser);
+                await context.Users!.AddAsync(adminUser);
                 await context.SaveChangesAsync();
             }
         }

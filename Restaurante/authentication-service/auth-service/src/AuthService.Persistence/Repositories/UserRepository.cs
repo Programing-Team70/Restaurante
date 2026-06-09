@@ -10,18 +10,19 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 {
     public async Task<User> GetByIdAsync(string id)
     {
-        var user = await context.Users
+        var user = await (context.Users ?? throw new InvalidOperationException("Users Dbset is null"))
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Id == id);
+
         return user ?? throw new InvalidOperationException($"User with id {id} not found.");
     }
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await context.Users
+        return await (context.Users ?? throw new InvalidOperationException("Users Dbset is null"))
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
@@ -31,41 +32,41 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
-        return await context.Users
+        return await (context.Users ?? throw new InvalidOperationException("Users DbSet is null."))
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
+                .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => EF.Functions.ILike(u.UserName, username));
     }
 
     public async Task<User?> GetByEmailVerificationTokenAsync(string token)
     {
-        return await context.Users
+        return await (context.Users ?? throw new InvalidOperationException("Users DbSet is null."))
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
+                .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.UserEmail != null &&
-                u.UserEmail.EmailVerificationToken == token &&
-                u.UserEmail.EmailVerificationTokenExpiry > DateTime.UtcNow);
+                                    u.UserEmail.EmailVerificationToken == token &&
+                                    u.UserEmail.EmailVerificationTokenExpiry > DateTime.UtcNow);
     }
 
     public async Task<User?> GetByPasswordResetTokenAsync(string token)
     {
-        return await context.Users
+        return await (context.Users ?? throw new InvalidOperationException("Users DbSet is null."))
             .Include(u => u.UserEmail)
             .Include(u => u.UserPasswordReset)
             .Include(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
+                .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.UserPasswordReset != null &&
-                    u.UserPasswordReset.PasswordResetToken == token &&
-                    u.UserPasswordReset.PasswordResetTokenExpiry > DateTime.UtcNow);
+                                    u.UserPasswordReset.PasswordResetToken == token &&
+                                    u.UserPasswordReset.PasswordResetTokenExpiry > DateTime.UtcNow);
     }
 
     public async Task<User> CreateUserAsync(User user)
     {
-        context.Users.Add(user);
+        (context.Users ?? throw new InvalidOperationException("Users DbSet is null.")).Add(user);
         await context.SaveChangesAsync();
         return await GetByIdAsync(user.Id);
     }
@@ -79,40 +80,40 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     public async Task<bool> DeleteUserAsync(string id)
     {
         var user = await GetByIdAsync(id);
-        context.Users.Remove(user);
+        (context.Users ?? throw new InvalidOperationException("Users DbSet is null.")).Remove(user);
         await context.SaveChangesAsync();
         return true;
     }
 
     public async Task<bool> ExistsByEmailAsync(string email)
     {
-        return await context.Users
+        return await (context.Users ?? throw new InvalidOperationException("Users DbSet is null."))
             .AnyAsync(u => EF.Functions.ILike(u.Email, email));
     }
 
     public async Task<bool> ExistsByUsernameAsync(string username)
     {
-        return await context.Users
+        return await (context.Users ?? throw new InvalidOperationException("Users DbSet is null."))
             .AnyAsync(u => EF.Functions.ILike(u.UserName, username));
     }
 
     public async Task UpdateUserRoleAsync(string userId, string roleId)
     {
-        var existingRoles = await context.UserRoles
+        var existingRoles = await (context.UserRoles ?? throw new InvalidOperationException("UserRoles DbSet is null."))
             .Where(ur => ur.UserId == userId)
             .ToListAsync();
-        
+
         context.UserRoles.RemoveRange(existingRoles);
 
         var newUserRole = new UserRole
         {
-            Id = UuidGenerator.GenerateUserId(), 
+            Id = UuidGenerator.GenerateUserId(),
             UserId = userId,
             RoleId = roleId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        
+
         context.UserRoles.Add(newUserRole);
         await context.SaveChangesAsync();
     }

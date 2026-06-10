@@ -10,15 +10,17 @@ using AuthService.Domain.Constants;
 namespace AuthService.Api.Controllers;
 
 [ApiController]
-[Route("res/auth/[controller]")]
-public class AuthController(IAuthService authService) : ControllerBase
+[Route("res/[controller]")]
+public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IUserManagementService _userManagementService;
     private readonly IRefreshTokenService _refreshTokenService;
 
-    public AuthController(IAuthService authService, IRefreshTokenService refreshTokenService)
+    public AuthController(IAuthService authService, IUserManagementService userManagementService, IRefreshTokenService refreshTokenService)
     {
         _authService = authService;
+        _userManagementService = userManagementService;
         _refreshTokenService = refreshTokenService;
     }
 
@@ -39,27 +41,6 @@ public class AuthController(IAuthService authService) : ControllerBase
         return Ok(new { message = "Sesión cerrada correctamente." });
     }
 
-    // Perfil y usuarios, Obtener informacion del perfil.
-    [HttpGet("profile")]
-    [Authorize]
-    public async Task<ActionResult<object>> GetProfile()
-    {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-        if (userIdClaim == null || string.IsNullOrEmpty(userIdClaim.Value))
-        { return Unauthorized(); }
-
-        var user = await _authService.GetUserByIdAsync(userIdClaim.Value);
-        if (user == null)
-        { return NotFound(); }
-
-        return Ok(new
-        {
-            success = true,
-            message = "Perfil De Usuario obtenido exitosamente.",
-            data = user
-        });
-    }
-
     //Registro y Autentificación, Crear usuarios e iniciar sesión en caso de ser necesario.
     [HttpPost("register")]
     [EnableRateLimiting("AuthPolicy")]
@@ -68,12 +49,12 @@ public class AuthController(IAuthService authService) : ControllerBase
         var result = await _authService.RegisterAsync(registerDto);
         return StatusCode(201, result);
     }
-    
+
     [HttpPost("login")]
     [EnableRateLimiting("AuthPolicy")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto loginDto)
     {
-        var result = await authService.LoginAsync(loginDto);
+        var result = await _authService.LoginAsync(loginDto);
         return Ok(result);
     }
 
@@ -82,7 +63,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     [EnableRateLimiting("AuthPolicy")]
     public async Task<ActionResult<EmailResponseDto>> VerifyEmail([FromBody] VerifyEmailDto verifyEmailDto)
     {
-        var result = await authService.VerifyEmailAsync(verifyEmailDto);
+        var result = await _authService.VerifyEmailAsync(verifyEmailDto);
         return Ok(result);
     }
 

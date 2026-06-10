@@ -26,18 +26,12 @@ public static partial class LoggerExtensions
     [LoggerMessage(
         EventId = 1004,
         Level = LogLevel.Warning,
-        Message = "Error: Correo electronico existe.")]
+        Message = "Correo electrónico ya registrado")]
     public static partial void LogRegistrationWithExistingEmail(this ILogger logger);
 
     [LoggerMessage(
         EventId = 1005,
         Level = LogLevel.Warning,
-        Message = "Error: Nombre de usuario existente.")]
+        Message = "Nombre de usuario ya registrado")]
     public static partial void LogRegistrationWithExistingUsername(this ILogger logger);
-
-    [LoggerMessage(
-        EventId = 1006,
-        Level = LogLevel.Error,
-        Message = "Error: No se ha podido cargar la foto de perfil.")]
-    public static partial void LogImageUploadError(this ILogger logger);
 }

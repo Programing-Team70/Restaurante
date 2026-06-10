@@ -1,5 +1,6 @@
 using AuthService.Application.Interfaces;
 using AuthService.Domain.Entities;
+using AuthService.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -8,7 +9,7 @@ using System.Text;
 
 namespace AuthService.Application.Services;
 
-public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
+public class JwtTokenService(IConfiguration configuration, IUserRepository userRepository) : IJwtTokenService
 {
     public string GenerateToken(User user)
     {
@@ -21,15 +22,13 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var role = user.UserRoles?.FirstOrDefault()?.Role?.Name ?? "User";
+        var role = user.UserRoles?.FirstOrDefault()?.Role?.Name ?? "CLIENTE";
 
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(ClaimTypes.Role, role),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
             new Claim("role", role)
         };
 
@@ -38,6 +37,43 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
             audience: audience,
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(expiryInMinutes),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public async Task<string> GenerateTokenAsync(string userId, int expiresInMinutes = 20)
+    {
+        var user = await userRepository.GetByIdAsync(userId);
+
+        // Si el usuario no existe, lanzamos una excepción o manejamos el caso según sea necesario
+        if (user == null)
+            throw new UnauthorizedAccessException("Usuario no encontrado para generación de token");
+
+        var jwtSettings = configuration.GetSection("JwtSettings");
+        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        var issuer = jwtSettings["Issuer"] ?? "AuthDotnet";
+        var audience = jwtSettings["Audience"] ?? "AuthDotnet";
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var role = user.UserRoles?.FirstOrDefault()?.Role?.Name ?? "CLIENTE";
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+            new Claim("role", role)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expiresInMinutes),
             signingCredentials: credentials
         );
 

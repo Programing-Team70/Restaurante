@@ -9,41 +9,43 @@ using AuthService.Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using AuthService.Application.DTOs.Email;
+using System.Security.Cryptography.X509Certificates;
 
 namespace AuthService.Application.Services;
 
 public class AuthService(
+    IRefreshTokenService refreshTokenService,
     IUserRepository userRepository,
     IRoleRepository roleRepository,
     IPasswordHashService passwordHashService,
     IJwtTokenService jwtTokenService,
     IEmailService emailService,
-    IConfiguration configuration,
+    // IConfiguration configuration,
     ILogger<AuthService> logger) : IAuthService
 {
     public async Task<RegisterResponseDto> RegisterAsync(RegisterDto registerDto)
     {
+        // Verificar si el correo electrónico o el nombre de usuario ya existen
         if (await userRepository.ExistsByEmailAsync(registerDto.Email))
         {
             logger.LogRegistrationWithExistingEmail();
             throw new BusinessException(ErrorCodes.EMAIL_ALREADY_EXISTS, "Correo Electronico Existente.");
         }
+
         if (await userRepository.ExistsByUsernameAsync(registerDto.Username))
         {
             logger.LogRegistrationWithExistingUsername();
             throw new BusinessException(ErrorCodes.USERNAME_ALREADY_EXISTS, "Nombre de Usuario Existente.");
         }
 
+        // Crear el usuario
         var emailVerificationToken = TokenGenerator.GenerateEmailVerificationToken();
         var userId = UuidGenerator.GenerateUserId();
         var userEmailId = UuidGenerator.GenerateUserId();
         var userRoleId = UuidGenerator.GenerateUserId();
-        var defaultRole = await roleRepository.GetByNameAsync(RoleConstants.USER_ROLE);
-        
-        if (defaultRole == null)
-        {
-            throw new InvalidOperationException($"Rol predeterminado '{RoleConstants.USER_ROLE}' no encontrado. Asegúrese de que la inicialización se ejecute antes del registro.");
-        }
+
+        // Si el rol predeterminado no existe, lanzar una excepción
+        var defaultRole = await roleRepository.GetByNameAsync(RoleConstants.CLIENTE) ?? throw new InvalidOperationException($"Rol predeterminado '{RoleConstants.CLIENTE}' no encontrado. Asegúrese de que la inicialización se ejecute antes del registro.");
 
         var user = new User
         {
@@ -51,6 +53,7 @@ public class AuthService(
             Name = registerDto.Name,
             SurName = registerDto.Surname,
             UserName = registerDto.Username,
+            Phone = registerDto.Phone,
             Email = registerDto.Email.ToLowerInvariant(),
             Password = passwordHashService.HashPassword(registerDto.Password),
             Status = false,
@@ -62,7 +65,7 @@ public class AuthService(
                 EmailVerificationToken = emailVerificationToken,
                 EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24)
             },
-            UserRoles = 
+            UserRoles =
             [
                 new Domain.Entities.UserRole
                 {
@@ -70,7 +73,14 @@ public class AuthService(
                     UserId = userId,
                     RoleId = defaultRole.Id
                 }
-            ]
+            ],
+            UserPasswordReset = new UserPasswordReset
+            {
+                Id = UuidGenerator.GenerateUserId(),
+                UserId = userId,
+                PasswordResetToken = null,
+                PasswordResetTokenExpiry = null
+            }
         };
 
         var createdUser = await userRepository.CreateUserAsync(user);
@@ -104,51 +114,65 @@ public class AuthService(
 
         if (loginDto.EmailOrUsername.Contains('@'))
         {
+            // Si el input contiene '@', se asume que es un correo electrónico
             user = await userRepository.GetByEmailAsync(loginDto.EmailOrUsername.ToLowerInvariant());
-        } else
+        }
+        else
         {
+            // Si el input no contiene '@', se asume que es un nombre de usuario
             user = await userRepository.GetByUsernameAsync(loginDto.EmailOrUsername);
         }
+
+        // Validar el usuario
         if (user == null)
         {
             logger.LogFailedLoginAttempt();
-            throw new UnauthorizedAccessException("Credenciales Indavlidas.");
+            throw new UnauthorizedAccessException("Credenciales Invalidas.");
         }
+
+        // Verificar si el correo electrónico ha sido verificado
         if (!user.Status)
         {
             logger.LogFailedLoginAttempt();
             throw new UnauthorizedAccessException("Cuenta de Usuario Desabilitada.");
         }
+
+        // Verificar la contraseña
         if (!passwordHashService.VerifyPassword(loginDto.Password, user.Password))
         {
             logger.LogFailedLoginAttempt();
-            throw new UnauthorizedAccessException("Credenciales Indavlidas.");
+            throw new UnauthorizedAccessException("Credenciales Invalidas.");
         }
 
         logger.LogUserLoggedIn();
 
-        var token = jwtTokenService.GenerateToken(user);
-        var expiryMinutes = int.Parse(configuration["JwtSettings:ExpiryInMinutes"] ?? "30");
+        // Generar el token JWT
+        var accessToken = await jwtTokenService.GenerateTokenAsync(user.Id, expiresInMinutes: 20);
+        var (refreshToken, _) = await refreshTokenService.CreateAsync(user.Id);
 
+        // Combinar el token de acceso y el token de actualización en un solo token JWT
         return new AuthResponseDto
         {
             Success = true,
             Message = "Se ha iniciado sesion correctamente.",
-            Token = token,
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
             UserDetails = MapToUserDetailsDto(user),
-            ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes)
+            ExpiresAt = 20 * 60 // 20 minutos en segundos
         };
     }
 
+    // Métodos privados para mapear entidades a DTOs
     private UserResponseDto MapToUserResponseDto(User user)
     {
-        var userRole = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE;
+        var userRole = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.CLIENTE;
         return new UserResponseDto
         {
             Id = user.Id,
             Name = user.Name,
             Surname = user.SurName,
             Username = user.UserName,
+            Phone = user.Phone,
             Email = user.Email,
             Role = userRole,
             Status = user.Status,
@@ -164,7 +188,7 @@ public class AuthService(
         {
             Id = user.Id,
             Username = user.UserName,
-            Role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.USER_ROLE
+            Role = user.UserRoles.FirstOrDefault()?.Role?.Name ?? RoleConstants.CLIENTE
         };
     }
 
@@ -184,12 +208,15 @@ public class AuthService(
         user.Status = true;
         user.UserEmail.EmailVerificationToken = null;
         user.UserEmail.EmailVerificationTokenExpiry = null;
+
         await userRepository.UpdateUserAsync(user);
 
+        // Enviar correo electrónico de bienvenida
         try
         {
             await emailService.SendWelcomeEmailAsync(user.Email, user.UserName);
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             logger.LogError(ex, "No se ha enviado el correo electronico de bienvenida a {Email}", user.Email);
         }
@@ -204,7 +231,6 @@ public class AuthService(
             {
                 email = user.Email,
                 verified = true
-                // Asegúrate de que NO haya una línea aquí que diga: profilePicture = user.UserProfile
             }
         };
     }
@@ -221,6 +247,7 @@ public class AuthService(
                 Data = new { email = resendDto.Email, sent = false }
             };
         }
+
         if (user.UserEmail.EmailVerified)
         {
             return new EmailResponseDto
@@ -231,11 +258,14 @@ public class AuthService(
             };
         }
 
+        // Generar un nuevo token de verificación y actualizar el usuario
         var newToken = TokenGenerator.GenerateEmailVerificationToken();
         user.UserEmail.EmailVerificationToken = newToken;
         user.UserEmail.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
+
         await userRepository.UpdateUserAsync(user);
 
+        // Enviar el correo electrónico de verificación
         try
         {
             await emailService.SendEmailVerificationAsync(user.Email, user.UserName, newToken);
@@ -261,7 +291,7 @@ public class AuthService(
     public async Task<EmailResponseDto> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
     {
         var user = await userRepository.GetByEmailAsync(forgotPasswordDto.Email);
-        
+
         if (user == null)
         {
             return new EmailResponseDto
@@ -282,18 +312,21 @@ public class AuthService(
                 PasswordResetToken = resetToken,
                 PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1)
             };
-        } else
+        }
+        else
         {
             user.UserPasswordReset.PasswordResetToken = resetToken;
             user.UserPasswordReset.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
         }
         await userRepository.UpdateUserAsync(user);
 
+        // Enviar el correo electrónico de recuperación de contraseña
         try
         {
             await emailService.SendPasswordResetAsync(user.Email, user.UserName, resetToken);
             logger.LogInformation("Se ha enviado el correo electronico de recuperacion de contraseña a {Email}", user.Email);
-        } catch (Exception ex)
+        }
+        catch (Exception ex)
         {
             logger.LogError(ex, "No se ha enviado el correo electronico de recuperacion de contraseña a {Email}", user.Email);
         }
@@ -314,7 +347,7 @@ public class AuthService(
             return new EmailResponseDto
             {
                 Success = false,
-                Message = "Token de recuperacion invalido o vencido",
+                Message = "Token de recuperacion invalido o vencido.",
                 Data = new { token = resetPasswordDto.Token, reset = false }
             };
         }
@@ -322,6 +355,7 @@ public class AuthService(
         user.Password = passwordHashService.HashPassword(resetPasswordDto.NewPassword);
         user.UserPasswordReset.PasswordResetToken = null;
         user.UserPasswordReset.PasswordResetTokenExpiry = null;
+
         await userRepository.UpdateUserAsync(user);
 
         logger.LogInformation("Contraseña reestablecida en {Username}", user.UserName);

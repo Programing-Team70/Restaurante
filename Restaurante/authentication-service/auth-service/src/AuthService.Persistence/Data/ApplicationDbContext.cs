@@ -1,26 +1,45 @@
 using AuthService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Text;
 
 namespace AuthService.Persistence.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
-    public DbSet<User> Users { get; set; }
-    public DbSet<Role> Roles { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<UserEmail> UserEmails { get; set; }
-    public DbSet<UserPasswordReset> UserPasswordResets { get; set; }
+    public DbSet<User>? Users { get; set; }
+    public DbSet<Role>? Roles { get; set; }
+    public DbSet<UserRole>? UserRoles { get; set; }
+    public DbSet<UserEmail>? UserEmails { get; set; }
+    public DbSet<UserPasswordReset>? UserPasswordResets { get; set; }
+    public DbSet<RefreshToken>? RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Configuración del Refresh Token
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TokenHash).IsRequired();
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => e.FamilyId);
+            entity.Property(e => e.ExpiresAt).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UserId).IsRequired().HasMaxLength(16);
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(e => e.UserId);
+        });
+
         base.OnModelCreating(modelBuilder);
 
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
             var tableName = entity.GetTableName();
             if (!string.IsNullOrEmpty(tableName))
+            {
                 entity.SetTableName(ToSnakeCase(tableName));
+            }
 
             foreach (var property in entity.GetProperties())
             {
@@ -51,10 +70,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(e => e.Name).IsRequired().HasMaxLength(25);
             entity.Property(e => e.SurName).IsRequired().HasMaxLength(25);
             entity.Property(e => e.UserName).IsRequired();
+            entity.Property(e => e.Phone).IsRequired();
             entity.Property(e => e.Email).IsRequired();
             entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Status).HasDefaultValue(false);
-            
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
+
             entity.HasIndex(e => e.UserName).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
 
@@ -64,19 +86,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasOne(e => e.UserPasswordReset).WithOne(upr => upr.User).HasForeignKey<UserPasswordReset>(upr => upr.UserId);
         });
 
-        modelBuilder.Entity<UserProfile>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).HasMaxLength(16).ValueGeneratedOnAdd();
-            entity.Property(e => e.UserId).HasMaxLength(16);
-            entity.Property(e => e.Phone).HasMaxLength(8);
-        });
-
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasMaxLength(16).ValueGeneratedOnAdd();
             entity.Property(e => e.Name).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
         });
 
         modelBuilder.Entity<UserRole>(entity =>
@@ -85,6 +101,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.Property(e => e.Id).HasMaxLength(16).ValueGeneratedOnAdd();
             entity.Property(e => e.UserId).HasMaxLength(16);
             entity.Property(e => e.RoleId).HasMaxLength(16);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
+
+            // Relaciones
+            entity.HasOne(ur => ur.User).WithMany(u => u.UserRoles).HasForeignKey(ur => ur.UserId);
+            entity.HasOne(ur => ur.Role).WithMany(r => r.UserRoles).HasForeignKey(ur => ur.RoleId);
         });
 
         modelBuilder.Entity<UserEmail>(entity =>
@@ -108,26 +130,34 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     private void UpdateTimestamps()
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => e.State is EntityState.Added or EntityState.Modified);
+            .Where(e => (e.Entity is User || e.Entity is Role || e.Entity is UserRole)
+                && (e.State == EntityState.Added || e.State == EntityState.Modified));
 
         foreach (var entry in entries)
         {
-            var now = DateTime.UtcNow;
-
             if (entry.Entity is User user)
             {
-                if (entry.State == EntityState.Added) user.CreatedAt = now;
-                user.UpdatedAt = now;
+                if (entry.State == EntityState.Added)
+                {
+                    user.CreatedAt = DateTime.UtcNow;
+                }
+                user.UpdatedAt = DateTime.UtcNow;
             }
             else if (entry.Entity is Role role)
             {
-                if (entry.State == EntityState.Added) role.CreatedAt = now;
-                role.UpdatedAt = now;
+                if (entry.State == EntityState.Added)
+                {
+                    role.CreatedAt = DateTime.UtcNow;
+                }
+                role.UpdatedAt = DateTime.UtcNow;
             }
             else if (entry.Entity is UserRole userRole)
             {
-                if (entry.State == EntityState.Added) userRole.CreatedAt = now;
-                userRole.UpdatedAt = now;
+                if (entry.State == EntityState.Added)
+                {
+                    userRole.CreatedAt = DateTime.UtcNow;
+                }
+                userRole.UpdatedAt = DateTime.UtcNow;
             }
         }
     }
@@ -136,16 +166,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         if (string.IsNullOrEmpty(input)) return input;
 
-        var sb = new StringBuilder();
-        for (int i = 0; i < input.Length; i++)
-        {
-            if (i > 0 && char.IsUpper(input[i]))
-            {
-                sb.Append('_');
-            }
-            sb.Append(char.ToLower(input[i]));
-        }
-        return sb.ToString();
+        return string.Concat(input.Select((c, i) => i > 0 && char.IsUpper(c) ? "_" + c : c.ToString())).ToLower();
     }
 
     public override int SaveChanges()

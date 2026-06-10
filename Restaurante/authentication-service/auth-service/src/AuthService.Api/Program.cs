@@ -1,6 +1,5 @@
 using AuthService.Api.Extensions;
 using AuthService.Api.Middlewares;
-using AuthService.Api.ModelBinders;
 using AuthService.Persistence.Data;
 using NetEscapades.AspNetCore.SecurityHeaders.Infrastructure;
 using Serilog;
@@ -14,23 +13,30 @@ System.Net.ServicePointManager.ServerCertificateValidationCallback += (sender, c
 builder.Host.UseSerilog((context, services, loggerConfiguration) => loggerConfiguration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services));
+
 builder.Services.AddControllers()
 .AddJsonOptions(o =>
 {
     o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
 });
+
 builder.Services.AddApiDocumentation();
+
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddRateLimitingPolicies();
+
 builder.Services.AddSecurityPolicies(builder.Configuration);
 builder.Services.AddSecurityOptions();
+
 var app = builder.Build();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 app.UseSerilogRequestLogging();
 app.UseSecurityHeaders(policies => policies
     .AddDefaultSecurityHeaders()
@@ -54,14 +60,19 @@ app.UseSecurityHeaders(policies => policies
     .AddCustomHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
     .AddCustomHeader("Cache-Control", "no-store, no-cache, must-revalidate, private")
 );
+
 app.UseMiddleware<GlobalExceptionMiddleware>();
+
 app.UseHttpsRedirection();
 app.UseCors("DefaultCorsPolicy");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.MapHealthChecks("/health");
+
 app.MapGet("/health", () =>
 {
     var response = new
@@ -71,6 +82,7 @@ app.MapGet("/health", () =>
     };
     return Results.Ok(response);
 });
+
 app.MapHealthChecks("/api/v1/health");
 var startupLogger = app.Services.GetRequiredService<ILogger<Program>>();
 app.Lifetime.ApplicationStarted.Register(() =>
@@ -87,15 +99,18 @@ app.Lifetime.ApplicationStarted.Register(() =>
                 var health = $"{addr.TrimEnd('/')}/health";
                 startupLogger.LogInformation("API de AuthService está ejecutándose en {Url}. Endpoint de salud: {HealthUrl}", addr, health);
             }
-        } else
+        }
+        else
         {
             startupLogger.LogInformation("API de AuthService iniciada. Endpoint de salud: /health");
         }
-    } catch (Exception ex)
+    }
+    catch (Exception ex)
     {
         startupLogger.LogWarning(ex, "Fallo al determinar las direcciones de escucha para el log de inicio");
     }
 });
+
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -105,9 +120,10 @@ using (var scope = app.Services.CreateScope())
         logger.LogInformation("Verificando conexión a la base de datos...");
         await context.Database.EnsureCreatedAsync();
         logger.LogInformation("Base de datos lista. Ejecutando datos semilla...");
-        
+        await DataSeeder.SeedAsync(context);
         logger.LogInformation("Inicialización de base de datos completada exitosamente");
-    } catch (Exception ex)
+    }
+    catch (Exception ex)
     {
         logger.LogError(ex, "Ocurrió un error al inicializar la base de datos");
         throw;

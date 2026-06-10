@@ -10,8 +10,8 @@ public class PasswordHashService : IPasswordHashService
     private const int SaltSize = 16;
     private const int HashSize = 32;
     private const int Iterations = 2;
-    private const int Memory = 65536;       
-    private const int Parallelism = 1;      
+    private const int Memory = 102400;
+    private const int Parallelism = 8;
 
     public string HashPassword(string password)
     {
@@ -41,80 +41,101 @@ public class PasswordHashService : IPasswordHashService
     {
         try
         {
-            if (string.IsNullOrEmpty(hashedPassword)) return false;
+            Console.WriteLine($"[DEBUG] Verifying password for hash: {hashedPassword.Substring(0, Math.Min(50, hashedPassword.Length))}...");
 
             if (hashedPassword.StartsWith("$argon2id$"))
             {
-                return VerifyArgon2StandardFormat(password, hashedPassword);
+                Console.WriteLine("[DEBUG] Uso de la verificación del formato estándar Argon2");
+                var result = VerifyArgon2StandardFormat(password, hashedPassword);
+                Console.WriteLine($"[DEBUG] Verificación resultante: {result}");
+                return result;
             }
+            else
+            {
+                Console.WriteLine("[DEBUG] Uso de la verificación del formato legacy");
 
-            return VerifyLegacyFormat(password, hashedPassword);
+                return VerifyLegacyFormat(password, hashedPassword);
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"[DEBUG] Error en VerificarContraseña: {ex.Message}");
             return false;
         }
     }
 
     private bool VerifyArgon2StandardFormat(string password, string hashedPassword)
     {
-        var parts = hashedPassword.Split('$');
-        if (parts.Length != 6) return false;
-
-        var parameters = parts[3].Split(',');
-        int m = Memory, t = Iterations, p = Parallelism;
-
-        foreach (var param in parameters)
+        try
         {
-            if (param.StartsWith("m=")) m = int.Parse(param[2..]);
-            if (param.StartsWith("t=")) t = int.Parse(param[2..]);
-            if (param.StartsWith("p=")) p = int.Parse(param[2..]);
+            var argon2Verifier = new Argon2id(Encoding.UTF8.GetBytes(password));
+
+            var parts = hashedPassword.Split('$');
+            if (parts.Length != 6) return false;
+
+            var paramsPart = parts[3];
+            var saltBase64 = parts[4];
+            var hashBase64 = parts[5];
+
+            var parameters = paramsPart.Split(',');
+            var memory = int.Parse(parameters[0].Split('=')[1]);
+            var iterations = int.Parse(parameters[1].Split('=')[1]);
+            var parallelism = int.Parse(parameters[2].Split('=')[1]);
+
+            var salt = Convert.FromBase64String(FromBase64UrlSafe(saltBase64));
+            var expectedHash = Convert.FromBase64String(FromBase64UrlSafe(hashBase64));
+
+            argon2Verifier.Salt = salt;
+            argon2Verifier.DegreeOfParallelism = parallelism;
+            argon2Verifier.Iterations = iterations;
+            argon2Verifier.MemorySize = memory;
+
+            var computedHash = argon2Verifier.GetBytes(expectedHash.Length);
+
+            return expectedHash.SequenceEqual(computedHash);
         }
-
-        byte[] salt = DecodeBase64WithoutPadding(parts[4]);
-        byte[] expectedHash = DecodeBase64WithoutPadding(parts[5]);
-
-        using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
+        catch (Exception ex)
         {
-            Salt = salt,
-            DegreeOfParallelism = p,
-            Iterations = t,
-            MemorySize = m
-        };
-
-        var computedHash = argon2.GetBytes(expectedHash.Length);
-        return CryptographicOperations.FixedTimeEquals(expectedHash, computedHash);
+            Console.WriteLine($"Error verifying Argon2 standard format: {ex.Message}");
+            return false;
+        }
     }
 
     private bool VerifyLegacyFormat(string password, string hashedPassword)
     {
-        try 
+        var hashBytes = Convert.FromBase64String(hashedPassword);
+
+        var salt = new byte[SaltSize];
+        var hash = new byte[HashSize];
+        Array.Copy(hashBytes, 0, salt, 0, SaltSize);
+        Array.Copy(hashBytes, SaltSize, hash, 0, HashSize);
+
+        var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
         {
-            var hashBytes = Convert.FromBase64String(hashedPassword);
-            if (hashBytes.Length < SaltSize + HashSize) return false;
+            Salt = salt,
+            DegreeOfParallelism = Parallelism,
+            Iterations = Iterations,
+            MemorySize = Memory
+        };
 
-            var salt = new byte[SaltSize];
-            var hash = new byte[HashSize];
-            Array.Copy(hashBytes, 0, salt, 0, SaltSize);
-            Array.Copy(hashBytes, SaltSize, hash, 0, HashSize);
-
-            using var argon2 = new Argon2id(Encoding.UTF8.GetBytes(password))
-            {
-                Salt = salt,
-                DegreeOfParallelism = Parallelism,
-                Iterations = Iterations,
-                MemorySize = Memory
-            };
-
-            var computedHash = argon2.GetBytes(HashSize);
-            return CryptographicOperations.FixedTimeEquals(hash, computedHash);
-        }
-        catch { return false; }
+        var computedHash = argon2.GetBytes(HashSize);
+        return hash.SequenceEqual(computedHash);
     }
 
-    private static byte[] DecodeBase64WithoutPadding(string base64)
+    private static string FromBase64UrlSafe(string base64UrlSafe)
     {
-        string padded = base64.Length % 4 == 0 ? base64 : base64.PadRight(base64.Length + (4 - base64.Length % 4), '=');
-        return Convert.FromBase64String(padded);
+        string base64 = base64UrlSafe.Replace('-', '+').Replace('_', '/');
+
+        switch (base64.Length % 4)
+        {
+            case 2:
+                base64 += "==";
+                break;
+            case 3:
+                base64 += "=";
+                break;
+        }
+
+        return base64;
     }
 }

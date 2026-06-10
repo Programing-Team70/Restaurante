@@ -12,6 +12,7 @@ public class Role
     [Required(ErrorMessage = "El nombre del role es obligatorio.")]
     [MaxLength(25, ErrorMessage = "El nombre del role no debe de tener más de 25 caracteres.")]
     public string Name { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 

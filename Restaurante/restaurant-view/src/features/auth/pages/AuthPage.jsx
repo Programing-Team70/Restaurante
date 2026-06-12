@@ -25,14 +25,12 @@ export const AuthPage = () => {
                     </p>
                 </div>
 
-                {/* Renderizado */}
                 {isForgot ? (
                     <ForgotPasswordForm onSwitch={() => setIsForgot(false)} />
                 ) : (
                     <LoginForm onForgot={() => setIsForgot(true)} />
                 )}
 
-                {/* Boton de Recuperar contraseña */}
                 {!isForgot && (
                     <div className='mt-8 text-center text-sm'>
                         <button

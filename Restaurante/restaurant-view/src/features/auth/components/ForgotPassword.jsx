@@ -26,7 +26,6 @@ export const ForgotPasswordForm = ({ onSwitch }) => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className='space-y-7'>
-            {/* Campo: Email con Label Flotante e Icono */}
             <section className='input-group relative'>
                 <input
                     type='email'
@@ -52,7 +51,6 @@ export const ForgotPasswordForm = ({ onSwitch }) => {
                     Correo Electrónico
                 </label>
 
-                {/* Icono de correo integrado en la parte derecha */}
                 <div className='absolute right-5 top-4.5 text-slate-400 pointer-events-none'>
                     <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path
@@ -71,7 +69,6 @@ export const ForgotPasswordForm = ({ onSwitch }) => {
                 )}
             </section>
 
-            {/* Control de error del servidor/Zustand */}
             {error && (
                 <p
                     className='text-red-600 text-sm text-center font-medium bg-red-50 py-2.5 rounded-lg border border-red-100'
@@ -81,7 +78,6 @@ export const ForgotPasswordForm = ({ onSwitch }) => {
                 </p>
             )}
 
-            {/* Botón de Enviar */}
             <button
                 type='submit'
                 disabled={loading}
@@ -90,14 +86,12 @@ export const ForgotPasswordForm = ({ onSwitch }) => {
                 {loading ? 'ENVIANDO...' : 'RECUPERAR CONTRASEÑA'}
             </button>
 
-            {/* Enlace para volver al Login optimizado */}
             <p className='text-center text-sm text-slate-600 pt-2'>
                 <button
                     type='button'
                     className='group inline-flex items-center gap-2 text-[#3b82f6] font-bold hover:text-blue-700 transition-colors'
                     onClick={onSwitch}
                 >
-                    {/* Flecha con animación hover hacia la izquierda */}
                     <svg
                         className='w-4 h-4 transform group-hover:-translate-x-1 transition-transform'
                         fill='none'

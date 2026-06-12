@@ -28,7 +28,6 @@ export const LoginForm = ({ onForgot }) => {
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className='space-y-7'>
-            {/* Campo: Usuario / Email */}
             <section className='input-group relative'>
                 <input
                     type='text'
@@ -53,7 +52,6 @@ export const LoginForm = ({ onForgot }) => {
                 )}
             </section>
 
-            {/* Campo: Contraseña */}
             <section className='input-group relative'>
                 <input
                     type={showPassword ? 'text' : 'password'}
@@ -72,7 +70,6 @@ export const LoginForm = ({ onForgot }) => {
                     Contraseña
                 </label>
 
-                {/* Botón para alternar visibilidad */}
                 <button
                     type='button'
                     onClick={() => setShowPassword(!showPassword)}
@@ -112,14 +109,12 @@ export const LoginForm = ({ onForgot }) => {
                 )}
             </section>
 
-            {/* Control de error del servidor/Zustand */}
             {error && (
                 <p className='text-red-600 text-sm text-center font-medium' role='alert'>
                     {error}
                 </p>
             )}
 
-            {/* Botón de Enviar */}
             <button
                 type='submit'
                 disabled={loading}

@@ -1,36 +1,48 @@
 import { useState } from 'react';
 import { LoginForm } from '../components/LoginForm';
 import { ForgotPasswordForm } from '../components/ForgotPassword';
+import image from '../../../assets/img/app-icon.jpeg';
 
 export const AuthPage = () => {
     const [isForgot, setIsForgot] = useState(false);
 
     return (
-        <div className='min-h-screen flex items-center justify-center bg-gray-50 p-4'>
-            <div className='w-full max-w-xl bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-10'>
-                <div className='flex justify-center mb-6'>
-                    <img src='/src/assets/img/kinal_sports.png' alt='Kinal Sports' className='h-20 w-auto' />
-                </div>
-
-                <div className='text-center mb-6'>
-                    <h1 className='text-2xl lg:text-3xl font-bold text-gray-900 mb-2'>
-                        {isForgot ? 'Recuperar Contraseña' : 'Bienvenido de Nuevo'}
+        <div className='min-h-screen flex items-center justify-center bg-gray-50 p-6'>
+            <div className='login-card w-full max-w-lg p-12 rounded-3xl bg-white shadow-lg border border-gray-100 text-slate-900'>
+                <div className='text-center mb-10'>
+                    <img
+                        src={image}
+                        alt='Heaven Flavor'
+                        className='profile-photo mx-auto mb-4 h-20 w-auto'
+                    />
+                    <h1 className='text-3xl font-bold text-gray-900 text-white'>
+                        {isForgot ? 'Recuperar Acceso' : 'Acceso Seguro'}
                     </h1>
-                    <p className='text-gray-600 text-base max-w-md mx-auto'>
+                    <p className='text-slate-500 mt-1'>
                         {isForgot
-                        ? 'Ingresa tu correo para recuperar contraseña'
-                        : 'Ingresa a tu cuenta de administrador Kinal Sports'}
+                            ? 'Introduce tu correo electrónico'
+                            : 'Introduce tus credenciales de administrador'}
                     </p>
                 </div>
 
+                {/* Renderizado */}
                 {isForgot ? (
-                    <ForgotPasswordForm
-                        onSwitch={() => {
-                        setIsForgot(false);
-                        }}
-                    />
+                    <ForgotPasswordForm onSwitch={() => setIsForgot(false)} />
                 ) : (
                     <LoginForm onForgot={() => setIsForgot(true)} />
+                )}
+
+                {/* Boton de Recuperar contraseña */}
+                {!isForgot && (
+                    <div className='mt-8 text-center text-sm'>
+                        <button
+                            type='button'
+                            onClick={() => setIsForgot(true)}
+                            className='text-[#3b82f6] font-bold hover:underline transition-all'
+                        >
+                            ¿Olvidaste tu contraseña? Recupérala aquí
+                        </button>
+                    </div>
                 )}
             </div>
         </div>

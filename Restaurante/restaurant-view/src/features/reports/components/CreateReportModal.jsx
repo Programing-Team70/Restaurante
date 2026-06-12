@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { useReportStore } from "../store/ReportStore";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import { XCircle, Upload } from 'lucide-react';
 
 export const CreateReportModal = ({ onClose, restaurantId }) => {
     const { addReport, loading } = useReportStore();
@@ -26,31 +27,38 @@ export const CreateReportModal = ({ onClose, restaurantId }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6">
-
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-semibold text-gray-800">
-                        Generar Reporte
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div 
+                className="fixed inset-0 bg-[#0a192f]/40 backdrop-blur-sm transition-opacity" 
+                onClick={onClose}
+            />
+        
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-3xl overflow-hidden transform transition-all z-10 max-h-[90vh] flex flex-col">
+                <div className="bg-[#0a192f] text-white px-10 py-4 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-lg font-bold tracking-wide">
+                            Crear Reporte
+                        </h2>
+                    </div>
+                    <button 
+                        type="button"
+                        onClick={onClose} 
+                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white disabled:opacity-50"
                     >
-                        <XMarkIcon className="w-6 h-6" />
+                        <XCircle size={22} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="p-10 overflow-y-auto space-y-5 flex-1 text-left">
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">
                             Título
                         </label>
                         <input
                             type="text"
                             placeholder="Ej: Reporte semanal de demanda"
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"
                             {...register("title", { required: "El título es requerido" })}
                         />
                         {errors.title && (
@@ -59,11 +67,11 @@ export const CreateReportModal = ({ onClose, restaurantId }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">
                             Tipo de Reporte
                         </label>
                         <select
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"
                             {...register("reportType", { required: "Selecciona un tipo" })}
                         >
                             <option value="">-- Seleccionar --</option>
@@ -80,12 +88,12 @@ export const CreateReportModal = ({ onClose, restaurantId }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">
                                 Fecha Inicio
                             </label>
                             <input
                                 type="date"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"
                                 {...register("startDate", { required: "Requerido" })}
                             />
                             {errors.startDate && (
@@ -93,12 +101,12 @@ export const CreateReportModal = ({ onClose, restaurantId }) => {
                             )}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">
                                 Fecha Fin
                             </label>
                             <input
                                 type="date"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"
                                 {...register("endDate", { required: "Requerido" })}
                             />
                             {errors.endDate && (
@@ -108,11 +116,11 @@ export const CreateReportModal = ({ onClose, restaurantId }) => {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">
                             Formato de salida
                         </label>
                         <select
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"
                             {...register("format")}
                         >
                             <option value="json">JSON (solo datos)</option>
@@ -125,19 +133,18 @@ export const CreateReportModal = ({ onClose, restaurantId }) => {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                            className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-sm transition-colors bg-[#0a192f] hover:bg-[#122b52]"
                         >
-                            {loading ? "Generando..." : "Generar Reporte"}
+                            {loading ? "Generando..." : "Guardar"}
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>

@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { useReportStore } from "../store/ReportStore";
 import { PlusIcon, ArrowPathIcon, PencilIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import { Plus, Trash2, XCircle, Edit3 } from 'lucide-react';
 
 export const StatisticsPage = () => {
     const {
@@ -110,21 +111,17 @@ export const StatisticsPage = () => {
     };
 
     return (
-        <div className="p-6 space-y-6">
-
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Estadísticas</h1>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Registra los datos diarios del restaurante
-                    </p>
+        <div className="w-full max-w-8xl mx-auto py-10 px-6 space-y-8 animate-in fade-in duration-500">
+            <header className="flex justify-between items-center border-b border-gray-100">
+                <div className="space-y-1">
+                    <h2 className="text-3xl font-bold text-[#0a192f]">Estadisticas</h2>
+                    <p className="text-gray-500 italic text-sm">Gestión de estadisticas Heaven Flavor</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => fetchStatistics(selectedRestaurantId)}
                         disabled={loading}
                         className="p-2 text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
-                        title="Refrescar"
                     >
                         <ArrowPathIcon className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
                     </button>
@@ -136,26 +133,24 @@ export const StatisticsPage = () => {
                             }
                             setShowForm(true);
                         }}
-                        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                        className="flex items-center gap-2 bg-[#0a192f] text-white px-5 py-5 rounded-lg font-semibold hover:bg-[#112240] transition-all shadow-lg hover:shadow-blue-900/20 active:scale-95 whitespace-nowrap tracking-wide"
                     >
-                        <PlusIcon className="w-4 h-4" />
-                        Nueva Estadística
+                        <Plus size={18} strokeWidth={2.5} /> 
+                        <span>Nuevo Estadistica</span>
                     </button>
                 </div>
-            </div>
+            </header>
 
-            <div className="bg-white border border-gray-200 rounded-xl p-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f]">
                     Restaurante
                 </label>
-
                 <select
                     value={selectedRestaurantId}
                     onChange={(e) => setSelectedRestaurantId(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors bg-white"
                 >
                     <option value="">Selecciona un restaurante</option>
-
                     {restaurants.map((restaurant) => (
                         <option
                             key={restaurant._id}
@@ -168,99 +163,103 @@ export const StatisticsPage = () => {
             </div>
 
             {showForm && (
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-gray-700">
-                            {editingId ? "Editar Estadística" : "Nueva Estadística"}
-                        </h2>
-                        <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600">
-                            <XMarkIcon className="w-5 h-5" />
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                    <div className="bg-[#0a192f] text-white px-10 py-4 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold tracking-wide">
+                                {editingId ? "Editar Estadística" : "Nueva Estadística"}
+                            </h3>
+                            <p className="text-xs text-gray-300 font-normal mt-0.5">
+                                {editingId ? 'Modifique una estadistica Heaven Flavor' : 'Cree una nueva estadistica Heaven Flavor'}
+                            </p>
+                        </div>
+                        <button onClick={handleCancel} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white disabled:opacity-50">
+                            <XCircle size={22} />
                         </button>
                     </div>
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form onSubmit={handleSubmit(onSubmit)} className="p-10 grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 text-left">
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">Fecha</label>
                             <input
                                 type="date"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"
                                 {...register("date", { required: "Requerido" })}
                             />
                             {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date.message}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ingresos Totales (Q)</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">Ingresos Totales (Q)</label>
                             <input
                                 type="number"
                                 step="0.01"
                                 placeholder="0.00"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                {...register("totalIncome", { required: "Requerido", min: 0 })}
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"                                {...register("totalIncome", { required: "Requerido", min: 0 })}
                             />
                             {errors.totalIncome && <p className="text-red-500 text-xs mt-1">{errors.totalIncome.message}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ocupación Promedio (%)</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">Ocupación Promedio (%)</label>
                             <input
                                 type="number"
                                 step="0.1"
                                 min="0"
                                 max="100"
                                 placeholder="0"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"                                {...register("totalIncome", { required: "Requerido", min: 0 })}
                                 {...register("averageOccupancy", { required: "Requerido", min: 0, max: 100 })}
                             />
                             {errors.averageOccupancy && <p className="text-red-500 text-xs mt-1">{errors.averageOccupancy.message}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Total de Órdenes</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">Total de Órdenes</label>
                             <input
                                 type="number"
                                 min="0"
                                 placeholder="0"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"                                {...register("totalIncome", { required: "Requerido", min: 0 })}
                                 {...register("totalOrders", { required: "Requerido", min: 0 })}
                             />
                             {errors.totalOrders && <p className="text-red-500 text-xs mt-1">{errors.totalOrders.message}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Satisfacción del Cliente (1-5)</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">Satisfacción del Cliente (1-5)</label>
                             <input
                                 type="number"
                                 step="0.1"
                                 min="1"
                                 max="5"
                                 placeholder="5.0"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"                                {...register("totalIncome", { required: "Requerido", min: 0 })}
                                 {...register("customerSatisfaction", { required: "Requerido", min: 1, max: 5 })}
                             />
                             {errors.customerSatisfaction && <p className="text-red-500 text-xs mt-1">{errors.customerSatisfaction.message}</p>}
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Hora Pico (0-23)</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">Hora Pico (0-23)</label>
                             <input
                                 type="number"
                                 min="0"
                                 max="23"
                                 placeholder="12"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"                                {...register("totalIncome", { required: "Requerido", min: 0 })}
                                 {...register("peakHour", { required: "Requerido", min: 0, max: 23 })}
                             />
                             {errors.peakHour && <p className="text-red-500 text-xs mt-1">{errors.peakHour.message}</p>}
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Plato más vendido</label>
+                            <label className="block text-xs font-bold uppercase tracking-wider text-[#0a192f] mb-2">Plato más vendido</label>
                             <input
                                 type="text"
                                 placeholder="Ej: Pollo a la plancha"
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#0a192f] text-sm font-medium transition-colors"                                {...register("totalIncome", { required: "Requerido", min: 0 })}
                                 {...register("topDish", { required: "Requerido" })}
                             />
                             {errors.topDish && <p className="text-red-500 text-xs mt-1">{errors.topDish.message}</p>}
@@ -270,14 +269,14 @@ export const StatisticsPage = () => {
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                                className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
                             >
                                 Cancelar
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                className="px-5 py-2.5 rounded-xl text-white text-sm font-semibold shadow-sm transition-colors bg-[#0a192f] hover:bg-[#122b52]"
                             >
                                 {loading ? "Guardando..." : editingId ? "Actualizar" : "Guardar"}
                             </button>
@@ -288,59 +287,59 @@ export const StatisticsPage = () => {
             )}
 
             {loading && !statistics.length ? (
-                <div className="text-center py-16 text-gray-400">
+                <div className="text-center py-12 text-gray-400 tracking-[0.2em] uppercase text-xs animate-pulse">
                     <ArrowPathIcon className="w-8 h-8 animate-spin mx-auto mb-2" />
-                    <p>Cargando estadísticas...</p>
+                    <p className="text-center py-12 text-gray-400 tracking-[0.2em] uppercase text-xs animate-pulse">Sincronizando con la base de datos Heaven Flavor...</p>
                 </div>
             ) : !statistics.length ? (
-                <div className="text-center py-16 text-gray-400">
-                    <p className="text-lg">No hay estadísticas registradas aún.</p>
+                <div className="text-center py-12 text-gray-400 tracking-[0.2em] uppercase text-xs animate-pulse">
+                    <p className="text-center py-12 text-gray-400 tracking-[0.2em] uppercase text-xs animate-pulse">Aún no hay estadísticas registradas.</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-xl border border-gray-200">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
-                            <tr>
-                                <th className="px-4 py-3">Fecha</th>
-                                <th className="px-4 py-3">Ingresos (Q)</th>
-                                <th className="px-4 py-3">Ocupación %</th>
-                                <th className="px-4 py-3">Órdenes</th>
-                                <th className="px-4 py-3">Satisfacción</th>
-                                <th className="px-4 py-3">Hora Pico</th>
-                                <th className="px-4 py-3">Plato Top</th>
-                                <th className="px-4 py-3">Acciones</th>
+                <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table className="w-full text-left min-w-max border-collapse divide-x divide-gray-200">
+                        <thead className="bg-[#0a192f] text-white">
+                            <tr className="divide-x divide-gray-700">
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Fecha</th>
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Ingresos</th>
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Ocupación</th>
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Órdenes</th>
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Satisfacción</th>
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Hora Pico</th>
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Plato Top</th>
+                                <th className="px-6 py-4 text-xs uppercase tracking-widest font-semibold text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {statistics.map((stat) => (
                                 <tr key={stat._id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-4 py-3 text-gray-700">
+                                    <td className="px-6 py-4 font-medium text-[#0a192f] text-center text-sm">
                                         {new Date(stat.date).toLocaleDateString("es-GT")}
                                     </td>
-                                    <td className="px-4 py-3 text-gray-600">
+                                    <td className="px-6 py-4 font-medium text-[#0a192f] text-center text-sm">
                                         Q{Number(stat.performance.totalIncome).toFixed(2)}
                                     </td>
-                                    <td className="px-4 py-3 text-gray-600">{stat.performance?.averageOccupancy}%</td>
-                                    <td className="px-4 py-3 text-gray-600">{stat.performance?.ordersPerDay}</td>
-                                    <td className="px-4 py-3 text-gray-600">{stat.performance?.customerSatisfaction}/5</td>
-                                    <td className="px-4 py-3 text-gray-600">{stat.demand?.peakHour}:00</td>
-                                    <td className="px-4 py-3 text-gray-600">{stat.topDishes?.[0]?.name}</td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 font-medium text-[#0a192f] text-center text-sm">{stat.performance?.averageOccupancy}%</td>
+                                    <td className="px-6 py-4 font-medium text-[#0a192f] text-center text-sm">{stat.performance?.ordersPerDay}</td>
+                                    <td className="px-6 py-4 font-medium text-[#0a192f] text-center text-sm">{stat.performance?.customerSatisfaction}/5</td>
+                                    <td className="px-6 py-4 font-medium text-[#0a192f] text-center text-sm">{stat.demand?.peakHour}:00</td>
+                                    <td className="px-6 py-4 font-medium text-[#0a192f] text-center text-sm">{stat.topDishes?.[0]?.name}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="flex items-center justify-center space-x-4 whitespace-nowrap">
                                             <button
                                                 onClick={() => handleEdit(stat)}
-                                                className="text-blue-400 hover:text-blue-600 transition-colors"
+                                                className="p-2.5 text-blue-600 hover:bg-blue-50 hover:scale-105 rounded-xl transition-all duration-200"
                                                 title="Editar"
                                             >
-                                                <PencilIcon className="w-4 h-4" />
+                                                <Edit3 size={22}/>
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(stat._id)}
                                                 disabled={loading}
-                                                className="text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+                                                className="p-2.5 text-red-600 hover:bg-red-50 hover:scale-105 rounded-xl transition-all duration-200"
                                                 title="Eliminar"
                                             >
-                                                <TrashIcon className="w-4 h-4" />
+                                                <Trash2 size={22}/>
                                             </button>
                                         </div>
                                     </td>

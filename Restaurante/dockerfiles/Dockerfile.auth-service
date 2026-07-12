@@ -3,17 +3,17 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copiar el archivo de la solución y los proyectos para restaurar dependencias
-COPY *.sln ./
-COPY src/AuthService.Api/*.csproj src/AuthService.Api/
-COPY src/AuthService.Application/*.csproj src/AuthService.Application/
-COPY src/AuthService.Domain/*.csproj src/AuthService.Domain/
-COPY src/AuthService.Persistence/*.csproj src/AuthService.Persistence/
+COPY Restaurante/authentication-service/auth-service/*.sln ./
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Api/*.csproj src/AuthService.Api/
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Application/*.csproj src/AuthService.Application/
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Domain/*.csproj src/AuthService.Domain/
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Persistence/*.csproj src/AuthService.Persistence/
 
 # Restaurar paquetes NuGet
 RUN dotnet restore
 
 # Copiar el resto del código fuente
-COPY . .
+COPY Restaurante/authentication-service/auth-service/ ./
 
 # Compilar y publicar directamente en la carpeta /app/publish
 RUN dotnet publish "src/AuthService.Api/AuthService.Api.csproj" -c Release -o /app/publish

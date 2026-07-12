@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.pnpm-store/
 dist
 dist-ssr
 *.local
@@ -22,3 +23,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Vite
+.vite
+
+# GitHub (instrucciones locales de Copilot/IDE)
+.github/
+
+# Cursor (configuracion local del IDE)
+.cursor/
+
+# Caches de lint y tests
+coverage/
+.eslintcache

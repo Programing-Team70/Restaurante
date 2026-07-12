@@ -1,26 +1,29 @@
-'use strict';
+"use strict";
 
-import fs from "fs";
-import path from "path";
-import { v4 as uuid } from "uuid";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export const uploadBuffer = async (buffer, folder, format) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: `heaven-flavor/${folder}`,
+        format: format,
+      },
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
 
-    const fileName = `${uuid()}.${format}`;
-
-    const uploadPath = path.join(
-        process.cwd(),
-        "uploads",
-        folder
+        resolve(result.secure_url);
+      },
     );
 
-    if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath, { recursive: true });
-    }
-
-    const filePath = path.join(uploadPath, fileName);
-
-    fs.writeFileSync(filePath, buffer);
-
-    return `http://localhost:${process.env.PORT}/uploads/${folder}/${fileName}`;
+    uploadStream.end(buffer);
+  });
 };

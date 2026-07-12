@@ -6,20 +6,18 @@ RUN apt-get update \
 
 WORKDIR /src
 
-COPY AuthService.sln ./
-COPY src/AuthService.Domain/ src/AuthService.Domain/
-COPY src/AuthService.Persistence/ src/AuthService.Persistence/
-COPY src/AuthService.Application/ src/AuthService.Application/
-COPY src/AuthService.Api/ src/AuthService.Api/
+# Rutas completas desde la raíz del repositorio
+COPY Restaurante/authentication-service/AuthService.sln ./
+COPY Restaurante/authentication-service/src/AuthService.Domain/ ./src/AuthService.Domain/
+COPY Restaurante/authentication-service/src/AuthService.Persistence/ ./src/AuthService.Persistence/
+COPY Restaurante/authentication-service/src/AuthService.Application/ ./src/AuthService.Application/
+COPY Restaurante/authentication-service/src/AuthService.Api/ ./src/AuthService.Api/
 
 RUN dotnet restore AuthService.sln
 
-ENV ASPNETCORE_ENVIRONMENT=Development
-ENV ASPNETCORE_URLS=http://+:5210
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:10000
 
-ENV DOTNET_USE_POLLING_FILE_WATCHER=1
-ENV DOTNET_WATCH_RESTART_ON_RUDE_EDIT=1
+EXPOSE 10000
 
-EXPOSE 5210
-
-CMD ["dotnet", "watch", "--project", "src/AuthService.Api", "run", "--urls", "http://+:5210"]
+CMD ["dotnet", "run", "--project", "src/AuthService.Api/AuthService.Api.csproj", "--configuration", "Release"]

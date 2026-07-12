@@ -1,0 +1,328 @@
+name: Heaven-Flavor
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: heaven_flavor_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-Restaurant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-¡R8ta!}
+      POSTGRES_DB: ${POSTGRES_DB:-restaurant_users}
+    ports:
+      - "${POSTGRES_PORT:-5436}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-Restaurant} -d ${POSTGRES_DB:-restaurant_users}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - heaven-network
+
+  mongodb:
+    image: mongo:7
+    container_name: heaven_flavor_mongodb
+    restart: unless-stopped
+    ports:
+      - "${MONGODB_PORT:-27020}:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 60s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - heaven-network
+
+  auth-service:
+    build:
+      context: ./authentication-service/auth-service
+      dockerfile: ../../dockerfiles/Dockerfile.auth-service
+    container_name: heaven_flavor_auth_service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5210
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      ConnectionStrings__DefaultConnection: >-
+        Host=postgres;Port=5432;Database=${POSTGRES_DB:-restaurant_users};
+        Username=${POSTGRES_USER:-Restaurant};Password=${POSTGRES_PASSWORD:-¡R8ta!}
+      AppSettings__FrontendUrl: ${FRONTEND_URL:-http://localhost:5173}
+      JwtSettings__SecretKey: ${JWT_SECRET:-MyVerySecretKeyForJWTTokenAuthenticationWith256Bits!}
+      JwtSettings__Issuer: ${JWT_ISSUER:-HeavenFlavor}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-HeavenFlavor}
+      SmtpSettings__Enabled: "true"
+      SmtpSettings__Host: ${SMTP_HOST:-smtp.gmail.com}
+      SmtpSettings__Port: ${SMTP_PORT:-465}
+      SmtpSettings__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      SmtpSettings__Username: ${SMTP_USERNAME:-}
+      SmtpSettings__Password: ${SMTP_PASSWORD:-}
+      SmtpSettings__FromEmail: ${SMTP_FROM:-${EMAIL_FROM:-}}
+      SmtpSettings__FromName: ${SMTP_FROM_NAME:-${EMAIL_FROM_NAME:-Heaven Flavor Support}}
+      SmtpSettings__UseImplicitSsl: ${SMTP_USE_IMPLICIT_SSL:-true}
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./authentication-service/auth-service:/src
+      - /src/src/AuthService.Api/bin
+      - /src/src/AuthService.Api/obj
+      - /src/src/AuthService.Application/bin
+      - /src/src/AuthService.Application/obj
+      - /src/src/AuthService.Domain/bin
+      - /src/src/AuthService.Domain/obj
+      - /src/src/AuthService.Persistence/bin
+      - /src/src/AuthService.Persistence/obj
+    ports:
+      - "${AUTH_SERVICE_PORT:-5210}:5210"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5210/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - heaven-network
+
+  restaurant-service:
+    build:
+      context: ./restaurant-service
+      dockerfile: ../dockerfiles/Dockerfile.restaurant-service
+    container_name: heaven_flavor_restaurant_service
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3021
+      URI_MONGODB: mongodb://mongodb:27017/${MONGO_DB_NAME:-heaven-flavor}
+      CHOKIDAR_USEPOLLING: "true"
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./restaurant-service:/app
+      - /app/node_modules
+    ports:
+      - "${RESTAURANT_SERVICE_PORT:-3021}:3021"
+    command: sh -c "CI=true pnpm install && node_modules/.bin/nodemon --legacy-watch index.js"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:3021/heaven-flavor/rest/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - heaven-network
+
+  reservations-service:
+    build:
+      context: ./reservations-service
+      dockerfile: ../dockerfiles/Dockerfile.reservations-service
+    container_name: heaven_flavor_reservations_service
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3023
+      URI_MONGODB: mongodb://mongodb:27017/${MONGO_DB_NAME:-heaven-flavor}
+      CHOKIDAR_USEPOLLING: "true"
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./reservations-service:/app
+      - /app/node_modules
+    ports:
+      - "${RESERVATIONS_SERVICE_PORT:-3023}:3023"
+    command: sh -c "CI=true pnpm install && node_modules/.bin/nodemon --legacy-watch index.js"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:3023/heaven-flavor/reser/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - heaven-network
+
+  event-service:
+    build:
+      context: ./event-service
+      dockerfile: ../dockerfiles/Dockerfile.event-service
+    container_name: heaven_flavor_event_service
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3022
+      URI_MONGODB: mongodb://mongodb:27017/${MONGO_DB_NAME:-heaven-flavor}
+      CHOKIDAR_USEPOLLING: "true"
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./event-service:/app
+      - /app/node_modules
+    ports:
+      - "${EVENT_SERVICE_PORT:-3022}:3022"
+    command: sh -c "CI=true pnpm install && node_modules/.bin/nodemon --legacy-watch index.js"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:3022/heaven-flavor/even/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - heaven-network
+
+  report-service:
+    build:
+      context: ./report-service
+      dockerfile: ../dockerfiles/Dockerfile.report-service
+    container_name: heaven_flavor_report_service
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3024
+      URI_MONGODB: mongodb://mongodb:27017/${MONGO_DB_NAME:-heaven-flavor}
+      CHOKIDAR_USEPOLLING: "true"
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./report-service:/app
+      - /app/node_modules
+    ports:
+      - "${REPORT_SERVICE_PORT:-3024}:3024"
+    command: sh -c "CI=true pnpm install && node_modules/.bin/nodemon --legacy-watch index.js"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:3024/heaven-flavor/even/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - heaven-network
+
+  restaurant-view:
+    build:
+      context: ./restaurant-view
+      dockerfile: ../dockerfiles/Dockerfile.restaurant-view
+    container_name: heaven_flavor_restaurant_view
+    restart: unless-stopped
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      restaurant-service:
+        condition: service_healthy
+      reservations-service:
+        condition: service_healthy
+      event-service:
+        condition: service_healthy
+      report-service:
+        condition: service_healthy
+    environment:
+      VITE_RESTAURANT_URL: ${VITE_RESTAURANT_URL:-http://localhost:3021/heaven-flavor/rest}
+      VITE_RESERVATION_URL: ${VITE_RESERVATION_URL:-http://localhost:3023/heaven-flavor/reser}
+      VITE_EVENT_URL: ${VITE_EVENT_URL:-http://localhost:3022/heaven-flavor/even}
+      VITE_REPORT_URL: ${VITE_REPORT_URL:-http://localhost:3024/heaven-flavor/even}
+      VITE_AUTH_URL: ${VITE_AUTH_URL:-http://localhost:5210/res/auth}
+      CLOUDINARY_BASE_FOLDER: ${CLOUDINARY_BASE_FOLDER:-https://res.cloudinary.com/dsbibfrfc/image/upload/Heaven_flavor}
+      CHOKIDAR_USEPOLLING: "true"
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./restaurant-view:/app
+      - /app/node_modules
+    ports:
+      - "${RESTAURANT_VIEW_PORT:-5173}:5173"
+    networks:
+      - heaven-network
+
+  restaurant-app:
+    build:
+      context: ./restaurant-app
+      dockerfile: ../dockerfiles/Dockerfile.restaurant-app
+    container_name: heaven_flavor_restaurant_app
+    restart: unless-stopped
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      restaurant-service:
+        condition: service_healthy
+      reservations-service:
+        condition: service_healthy
+      event-service:
+        condition: service_healthy
+      report-service:
+        condition: service_healthy
+    environment:
+      EXPO_PUBLIC_RESTAURANT_URL: ${EXPO_PUBLIC_RESTAURANT_URL:-http://10.0.2.2:3021/api/v1/auth}
+      EXPO_PUBLIC_RESERVATION_URL: ${EXPO_PUBLIC_RESERVATION_URL:-http://10.0.2.2:3023/api/v1/reservations}
+      EXPO_PUBLIC_EVENT_URL: ${EXPO_PUBLIC_EVENT_URL:-http://10.0.2.2:3022/api/v1/events}
+      EXPO_PUBLIC_REPORT_URL: ${EXPO_PUBLIC_REPORT_URL:-http://10.0.2.2:3024/api/v1/reports}
+      EXPO_PUBLIC_AUTH_URL: ${EXPO_PUBLIC_AUTH_URL:-http://10.0.2.2:5210/api/v1/auth}
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${EXPO_PACKAGER_HOSTNAME:-10.0.2.2}
+      EXPO_DEVTOOLS_LISTEN_ADDRESS: 0.0.0.0
+      EXPO_UNSTABLE_HEADLESS: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    env_file:
+      - path: .env.docker
+        required: false
+    volumes:
+      - ./restaurant-app:/app
+      - /app/node_modules
+    ports:
+      - "${RESTAURANT_APP_METRO_PORT:-8081}:8081"
+      - "${RESTAURANT_APP_EXPO_PORT:-19000}:19000"
+      - "${RESTAURANT_APP_EXPO_DEVTOOLS_PORT:-19001}:19001"
+      - "${RESTAURANT_APP_EXPO_INSPECTOR_PORT:-19002}:19002"
+    command: sh -c "CI=true pnpm install && pnpm exec expo start --host lan --port 8081"
+    networks:
+      - heaven-network
+
+networks:
+  heaven-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongo_data:

@@ -7,11 +7,11 @@ RUN apt-get update \
 WORKDIR /src
 
 # Rutas completas desde la raíz del repositorio
-COPY Restaurante/authentication-service/AuthService.sln ./
-COPY Restaurante/authentication-service/src/AuthService.Domain/ ./src/AuthService.Domain/
-COPY Restaurante/authentication-service/src/AuthService.Persistence/ ./src/AuthService.Persistence/
-COPY Restaurante/authentication-service/src/AuthService.Application/ ./src/AuthService.Application/
-COPY Restaurante/authentication-service/src/AuthService.Api/ ./src/AuthService.Api/
+COPY Restaurante/authentication-service/auth-service/AuthService.sln ./
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Domain/ ./src/AuthService.Domain/
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Persistence/ ./src/AuthService.Persistence/
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Application/ ./src/AuthService.Application/
+COPY Restaurante/authentication-service/auth-service/src/AuthService.Api/ ./src/AuthService.Api/
 
 RUN dotnet restore AuthService.sln
 
